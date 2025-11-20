@@ -1,0 +1,15 @@
+{
+  "hash": "6152963143831e0db5a3518dbbcc9ca7",
+  "result": {
+    "engine": "knitr",
+    "markdown": "# Estimação\n\n::: {style=\"text-align: right\"}\n\"Se isto for possível,<br>\nPois, me contem,<br>\nComo escrever de novo,<br>\nUm jornal de ontem\"<br>\nTom Zé\n:::\n\nFS vs shrinkage\n\n\n::: {.cell}\n\n```{.r .cell-code}\n1+ 1\n```\n\n::: {.cell-output .cell-output-stdout}\n\n```\n[1] 2\n```\n\n\n:::\n:::\n\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

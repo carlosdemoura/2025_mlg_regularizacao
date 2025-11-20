@@ -1,0 +1,15 @@
+{
+  "hash": "5d721f1177c3f26271a462a11b682431",
+  "result": {
+    "engine": "knitr",
+    "markdown": "# Exemplos\n\nEsparsidade, multicolinearidade e outliers\n\n\n::: {.cell}\n\n```{.r .cell-code}\n1\n```\n\n::: {.cell-output .cell-output-stdout}\n\n```\n[1] 1\n```\n\n\n:::\n:::\n\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

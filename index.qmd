@@ -1,16 +1,29 @@
-# Capa {.unnumbered}
+# Sobre {.unnumbered}
 
 ::: {style="text-align: right"}
-"Eu tô te explicando
-Pra te confundir
-Eu tô te confundindo
-Pra te esclarecer"
+"Eu tô te explicando<br>
+Pra te confundir<br>
+Eu tô te confundindo<br>
+Pra te esclarecer"<br>
+Tom Zé
 :::
 
-This is a Quarto book.
+Este é o [material auxiliar](https://github.com/carlosdemoura/2025_mlg_regularizacao) da apresentação do trabalho final do curso de Modelos Lineares Generalizados (MLGs) (DEST-UFMG, 2025/2).
+O tema é regularização em MLGs, em específico os métodos de regularização ridge, lasso e elastic net e este [quarto book](https://quarto.org/) está dividido da seguinte forma:
 
-To learn more about Quarto books visit <https://quarto.org/docs/books>.
+* Definição de regularização e apresentação dos métodos de shrinkage, com exemplos de regressão normal;
+* Estimação dos parâmetros em MLG com penalização;
+* Tunagem dos parâmetros de regularização;
+* Exemplo prático com dados reais no R.
+
+Referências bibliográficas importantes que foram usadas para a feitura desse trabalho são citadas ao final do documento.
+
+Alguns pacotes que usaremos estão abaixo listados.
 
 ```{r}
-1 + 1
+#| eval: false
+if (!{"pak" %in% rownames(installed.packages())}) install.packages("pak")
+
+pak::pak(c("matrixcalc", "glmnet"))
 ```
+

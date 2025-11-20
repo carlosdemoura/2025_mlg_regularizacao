@@ -1,0 +1,17 @@
+{
+  "hash": "469f3fe438226c32ae9e7e3ae063c31d",
+  "result": {
+    "engine": "knitr",
+    "markdown": "# Regularização\n\nIn summary, this book has no content whatsoever.\n\n\n::: {.cell}\n\n```{.r .cell-code}\nset.seed(12345); x = rnorm(20); e = rt(20, 1); y = 2*x + e; plot(y~x); lm(y~0+x)\n```\n\n::: {.cell-output-display}\n![](regularização_files/figure-html/unnamed-chunk-1-1.png){width=672}\n:::\n\n::: {.cell-output .cell-output-stdout}\n\n```\n\nCall:\nlm(formula = y ~ 0 + x)\n\nCoefficients:\n    x  \n6.136  \n```\n\n\n:::\n:::\n\n",
+    "supporting": [
+      "regularização_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

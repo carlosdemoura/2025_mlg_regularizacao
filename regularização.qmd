@@ -1,7 +1,0 @@
-# Regularização
-
-In summary, this book has no content whatsoever.
-
-```{r}
-set.seed(12345); x = rnorm(20); e = rt(20, 1); y = 2*x + e; plot(y~x); lm(y~0+x)
-```

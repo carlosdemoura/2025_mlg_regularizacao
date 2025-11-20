@@ -1,0 +1,15 @@
+# Estimação
+
+::: {style="text-align: right"}
+"Se isto for possível,<br>
+Pois, me contem,<br>
+Como escrever de novo,<br>
+Um jornal de ontem"<br>
+Tom Zé
+:::
+
+FS vs shrinkage
+
+```{r}
+1+ 1
+```

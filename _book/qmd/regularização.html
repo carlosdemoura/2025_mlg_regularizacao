@@ -6,9 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Carlos de Moura">
 
-<title>Regularização em MLGs</title>
+<title>1&nbsp; Regularização – Regularização em MLGs</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -79,25 +78,26 @@ div.csl-indent {
 }</style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<link href="./qmd/regularização.html" rel="next">
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-f99d413f438961673f22afa6e1fcf549.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../qmd/estimação.html" rel="next">
+<link href="../index.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-f99d413f438961673f22afa6e1fcf549.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -126,6 +126,35 @@ div.csl-indent {
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -138,7 +167,7 @@ div.csl-indent {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./index.html">Sobre</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../qmd/regularização.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Regularização</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Procurar" onclick="window.quartoOpenSearch();">
@@ -153,7 +182,7 @@ div.csl-indent {
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">Regularização em MLGs</a> 
+      <a href="../">Regularização em MLGs</a> 
     </div>
       </div>
         <div class="mt-2 flex-shrink-0 align-items-center">
@@ -165,37 +194,37 @@ div.csl-indent {
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./index.html" class="sidebar-item-text sidebar-link active">
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Sobre</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./qmd/regularização.html" class="sidebar-item-text sidebar-link">
+  <a href="../qmd/regularização.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Regularização</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./qmd/estimação.html" class="sidebar-item-text sidebar-link">
+  <a href="../qmd/estimação.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Estimação</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./qmd/tunagem.html" class="sidebar-item-text sidebar-link">
+  <a href="../qmd/tunagem.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Tunagem</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./qmd/exemplo.html" class="sidebar-item-text sidebar-link">
+  <a href="../qmd/exemplo.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Exemplo prático</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./qmd/referências.html" class="sidebar-item-text sidebar-link">
+  <a href="../qmd/referências.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">References</span></a>
   </div>
 </li>
@@ -209,7 +238,12 @@ div.csl-indent {
     <h2 id="toc-title">Índice</h2>
    
   <ul>
-  <li><a href="#sobre" id="toc-sobre" class="nav-link active" data-scroll-target="#sobre">Sobre</a></li>
+  <li><a href="#seleção-de-variáveis-naïve" id="toc-seleção-de-variáveis-naïve" class="nav-link active" data-scroll-target="#seleção-de-variáveis-naïve"><span class="header-section-number">1.1</span> Seleção de variáveis naïve</a></li>
+  <li><a href="#ridge" id="toc-ridge" class="nav-link" data-scroll-target="#ridge"><span class="header-section-number">1.2</span> Ridge</a></li>
+  <li><a href="#lasso" id="toc-lasso" class="nav-link" data-scroll-target="#lasso"><span class="header-section-number">1.3</span> Lasso</a></li>
+  <li><a href="#comparação-das-técnicas" id="toc-comparação-das-técnicas" class="nav-link" data-scroll-target="#comparação-das-técnicas"><span class="header-section-number">1.4</span> Comparação das técnicas</a></li>
+  <li><a href="#elastic-net" id="toc-elastic-net" class="nav-link" data-scroll-target="#elastic-net"><span class="header-section-number">1.5</span> Elastic net</a></li>
+  <li><a href="#lidando-com-outliers" id="toc-lidando-com-outliers" class="nav-link" data-scroll-target="#lidando-com-outliers"><span class="header-section-number">1.6</span> Lidando com outliers</a></li>
   </ul>
 </nav>
     </div>
@@ -218,26 +252,14 @@ div.csl-indent {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Regularização em MLGs</h1>
+<h1 class="title"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Regularização</span></h1>
 </div>
 
 
 
 <div class="quarto-title-meta">
 
-    <div>
-    <div class="quarto-title-meta-heading">Autor</div>
-    <div class="quarto-title-meta-contents">
-             <p>Carlos de Moura </p>
-          </div>
-  </div>
     
-    <div>
-    <div class="quarto-title-meta-heading">Data de Publicação</div>
-    <div class="quarto-title-meta-contents">
-      <p class="date">1 de dezembro de 2025</p>
-    </div>
-  </div>
   
     
   </div>
@@ -247,24 +269,192 @@ div.csl-indent {
 </header>
 
 
-<section id="sobre" class="level1 unnumbered">
-<h1 class="unnumbered">Sobre</h1>
-<div style="text-align: right">
-<p>“Eu tô te explicando<br> Pra te confundir<br> Eu tô te confundindo<br> Pra te esclarecer”<br> Tom Zé</p>
-</div>
-<p>Este é o <a href="https://github.com/carlosdemoura/2025_mlg_regularizacao">material auxiliar</a> da apresentação do trabalho final do curso de Modelos Lineares Generalizados (MLGs) (DEST-UFMG, 2025/2). O tema é regularização em MLGs, em específico os métodos de regularização ridge, lasso e elastic net e este <a href="https://quarto.org/">quarto book</a> está dividido da seguinte forma:</p>
+<section id="seleção-de-variáveis-naïve" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="seleção-de-variáveis-naïve"><span class="header-section-number">1.1</span> Seleção de variáveis naïve</h2>
+<p>Stepwise</p>
+</section>
+<section id="ridge" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="ridge"><span class="header-section-number">1.2</span> Ridge</h2>
+<p>A técnica Ridge foi a primeira das três técnicas a surgir, no trabalho de <span class="citation" data-cites="ridge">Hoerl &amp; Kennard (<a href="referências.html#ref-ridge" role="doc-biblioref">1970</a>)</span>. Originalmente, os autores buscavam entender como superar problemas em que a matriz de covariáveis <span class="math inline">\(X\)</span> estava mal-especificada. Relembrando que na regressão linear normal, temos que</p>
+<p><span class="math display">\[
+Y = X \beta + \epsilon, \hspace{1cm} \epsilon \sim N_n\bigr( 0, \sigma^2 I_n \bigr)
+\]</span> O estimador de máxima verossimilhança (EMV) de <span class="math inline">\(\beta\)</span> será o mesmo estimador de mínimos quadrados (EMQ)</p>
+<p><span class="math display">\[
+\hat\beta = (X^\top X)^{-1} X^\top Y,
+\]</span></p>
+<p>se:</p>
 <ul>
-<li>Definição de regularização e apresentação dos métodos de shrinkage, com exemplos de regressão normal;</li>
-<li>Estimação dos parâmetros em MLG com penalização;</li>
-<li>Tunagem dos parâmetros de regularização;</li>
-<li>Exemplo prático com dados reais no R.</li>
+<li><span class="math inline">\(X^\top X\)</span> for inversível;</li>
+<li>A matriz de covariáveis é ortogonalizável, i.e., os dados foram coletados de maneira independente;</li>
+<li>há menos betas que observações, isto é <code>ncol(X)</code> &lt;&lt; <code>nrow(X)</code>.</li>
 </ul>
-<p>Referências bibliográficas importantes que foram usadas para a feitura desse trabalho são citadas ao final do documento.</p>
-<p>Alguns pacotes que usaremos estão abaixo listados.</p>
+<p>Além disso, <span class="math inline">\(\hat\beta\)</span> é não viciado, consistente e tem matriz de covariâncias dada por</p>
+<p><span class="math display">\[
+cov\bigr(\hat\beta\bigr) = \sigma^2 (X^\top X)^{-1}.
+\]</span></p>
+<p>Uma vez que temos a distribuição do estimador, fica fácil fazer inferência via intervalos de confiança, por exemplo.</p>
+<p><span class="math display">\[
+\hat\beta \sim N_p\left(\beta,\; \sigma^2 (X^\top X)^{-1}\right).
+\]</span></p>
+<p>Nesse sentido, se temos uma matriz de dados problemática - no sentido em que <span class="math inline">\((X^\top X)^{-1}\)</span> não está bem definida, teremos problema de estimação via EMQ.</p>
+<p>Veja o exemplo numérico abaixo.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span>{<span class="st">"pak"</span> <span class="sc">%in%</span> <span class="fu">rownames</span>(<span class="fu">installed.packages</span>())}) <span class="fu">install.packages</span>(<span class="st">"pak"</span>)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>pak<span class="sc">::</span><span class="fu">pak</span>(<span class="fu">c</span>(<span class="st">"matrixcalc"</span>, <span class="st">"glmnet"</span>))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">10</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">cbind</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="dv">2</span><span class="sc">*</span>(<span class="dv">1</span><span class="sc">:</span>n))</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<details>
+<summary>
+<strong>Ver matriz X</strong>
+</summary>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     [,1] [,2]
+[1,]    1    2
+[2,]    2    4
+[3,]    3    6
+[4,]    4    8
+[5,]    5   10
+[6,]    6   12</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>matrixcalc<span class="sc">::</span><span class="fu">is.singular.matrix</span>(<span class="fu">t</span>(X)<span class="sc">%*%</span>X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+</details>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(Y<span class="sc">~</span>X[,<span class="dv">1</span>])</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(Y<span class="sc">~</span>X[,<span class="dv">2</span>])</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="regularização_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Y ~ 0 + X)
+
+Coefficients:
+    X1      X2  
+0.9544      NA  </code></pre>
+</div>
+</div>
+<details>
+<summary>
+<strong>E se a regressão estivesse na outra covariável?</strong>
+</summary>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">cbind</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="dv">2</span><span class="sc">*</span>(<span class="dv">1</span><span class="sc">:</span>n))</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Y ~ 0 + X)
+
+Coefficients:
+   X1     X2  
+1.954     NA  </code></pre>
+</div>
+</div>
+<p>Detalhes</p>
+</details>
+<p>Comentários sobre o modelo não saber selecionar variáveis.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">cbind</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="dv">2</span><span class="sc">*</span>(<span class="dv">1</span><span class="sc">:</span>n))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>ruido <span class="ot">=</span> <span class="fu">cbind</span>(<span class="fu">rep</span>(<span class="dv">0</span>,n), <span class="fu">rnorm</span>(n,<span class="dv">0</span>,.<span class="dv">1</span>))</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> X <span class="sc">+</span> ruido</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<details>
+<summary>
+<strong>Ver matriz X</strong>
+</summary>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     [,1]      [,2]
+[1,]    1  2.058553
+[2,]    2  4.070947
+[3,]    3  5.989070
+[4,]    4  7.954650
+[5,]    5 10.060589
+[6,]    6 11.818204</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>matrixcalc<span class="sc">::</span><span class="fu">is.singular.matrix</span>(<span class="fu">t</span>(X)<span class="sc">%*%</span>X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] FALSE</code></pre>
+</div>
+</div>
+</details>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Y ~ 0 + X)
+
+Coefficients:
+    X1      X2  
+ 6.658  -2.820  </code></pre>
+</div>
+</div>
+<p>Comentários sobre combinações lineares, parcimônia e inflação da variância na inferência.</p>
+<p>A proposta de <span class="citation" data-cites="ridge">Hoerl &amp; Kennard (<a href="referências.html#ref-ridge" role="doc-biblioref">1970</a>)</span></p>
+</section>
+<section id="lasso" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="lasso"><span class="header-section-number">1.3</span> Lasso</h2>
+<p>A regressão lasso surgiu com o artigo de <span class="citation" data-cites="lasso">Tibshirani (<a href="referências.html#ref-lasso" role="doc-biblioref">1996</a>)</span>.</p>
+</section>
+<section id="comparação-das-técnicas" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="comparação-das-técnicas"><span class="header-section-number">1.4</span> Comparação das técnicas</h2>
+<div style="text-align: right">
+<p>“You Can’t Always Get What You Want”</p>
+</div>
+</section>
+<section id="elastic-net" class="level2" data-number="1.5">
+<h2 data-number="1.5" class="anchored" data-anchor-id="elastic-net"><span class="header-section-number">1.5</span> Elastic net</h2>
+<p>O artigo <span class="citation" data-cites="en">Zou &amp; Hastie (<a href="referências.html#ref-en" role="doc-biblioref">2005</a>)</span> introduz o elastic net, que nada mais é que uma mistura das técnicas ridge e lasso.</p>
+</section>
+<section id="lidando-com-outliers" class="level2" data-number="1.6">
+<h2 data-number="1.6" class="anchored" data-anchor-id="lidando-com-outliers"><span class="header-section-number">1.6</span> Lidando com outliers</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>); x <span class="ot">=</span> <span class="fu">rnorm</span>(<span class="dv">20</span>); e <span class="ot">=</span> <span class="fu">rt</span>(<span class="dv">20</span>, <span class="dv">1</span>); y <span class="ot">=</span> <span class="dv">2</span><span class="sc">*</span>x <span class="sc">+</span> e; <span class="fu">plot</span>(y<span class="sc">~</span>x); <span class="fu">lm</span>(y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>x)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="regularização_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = y ~ 0 + x)
+
+Coefficients:
+    x  
+6.136  </code></pre>
+</div>
 </div>
 
 
@@ -696,10 +886,13 @@ Zou, H., &amp; Hastie, T. (2005). Regularization and Variable Selection via the 
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
+      <a href="../index.html" class="pagination-link" aria-label="Sobre">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Sobre</span>
+      </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./qmd/regularização.html" class="pagination-link" aria-label="Regularização">
-        <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Regularização</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../qmd/estimação.html" class="pagination-link" aria-label="Estimação">
+        <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Estimação</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

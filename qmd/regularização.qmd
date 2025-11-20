@@ -1,0 +1,160 @@
+# Regularização
+
+## Seleção de variáveis naïve
+
+Stepwise
+
+## Ridge
+
+A técnica Ridge foi a primeira das três técnicas a surgir, no trabalho de @ridge. Originalmente, os autores buscavam entender como superar problemas em que a matriz de covariáveis $X$ estava mal-especificada.
+Relembrando que na regressão linear normal, temos que 
+
+$$
+Y = X \beta + \epsilon, \hspace{1cm} \epsilon \sim N_n\bigr( 0, \sigma^2 I_n \bigr)
+$$
+O estimador de máxima verossimilhança (EMV) de $\beta$ será o mesmo estimador de mínimos quadrados (EMQ)
+
+$$
+\hat\beta = (X^\top X)^{-1} X^\top Y,
+$$
+
+se:
+
+* $X^\top X$ for inversível;
+* A matriz de covariáveis é ortogonalizável, i.e., os dados foram coletados de maneira independente;
+* há menos betas que observações, isto é `ncol(X)` << `nrow(X)`.
+
+Além disso, $\hat\beta$ é não viciado, consistente e tem matriz de covariâncias dada por
+
+$$
+cov\bigr(\hat\beta\bigr) = \sigma^2 (X^\top X)^{-1}.
+$$
+
+Uma vez que temos a distribuição do estimador, fica fácil fazer inferência via intervalos de confiança, por exemplo.
+
+$$
+\hat\beta \sim N_p\left(\beta,\; \sigma^2 (X^\top X)^{-1}\right).
+$$
+
+Nesse sentido, se temos uma matriz de dados problemática - no sentido em que $(X^\top X)^{-1}$ não está bem definida, teremos problema de estimação via EMQ.
+
+Veja o exemplo numérico abaixo.
+
+```{r}
+set.seed(12345)
+
+n = 10
+beta = c(1, 0)
+X = cbind(1:n, 2*(1:n))
+Y = X %*% beta + rnorm(n)
+```
+
+<details>
+<summary><strong>Ver matriz X</strong></summary>
+```{r}
+head(X)
+matrixcalc::is.singular.matrix(t(X)%*%X)
+```
+</details>
+
+```{r}
+#| fig-width:  10
+#| fig-height: 4
+par(mfrow=c(1,2))
+plot(Y~X[,1])
+plot(Y~X[,2])
+```
+
+```{r}
+lm(Y~0+X)
+```
+<details>
+<summary><strong>E se a regressão estivesse na outra covariável?</strong></summary>
+```{r}
+set.seed(12345)
+
+beta = c(0, 1)
+X = cbind(1:n, 2*(1:n))
+Y = X %*% beta + rnorm(n)
+
+lm(Y~0+X)
+```
+
+Detalhes
+
+</details>
+
+Comentários sobre o modelo não saber selecionar variáveis.
+
+```{r}
+set.seed(12345)
+
+beta = c(1, 0)
+X = cbind(1:n, 2*(1:n))
+ruido = cbind(rep(0,n), rnorm(n,0,.1))
+X = X + ruido
+Y = X %*% beta + rnorm(n)
+```
+
+<details>
+<summary><strong>Ver matriz X</strong></summary>
+```{r}
+head(X)
+matrixcalc::is.singular.matrix(t(X)%*%X)
+```
+
+</details>
+
+```{r}
+lm(Y~0+X)
+```
+
+Comentários sobre combinações lineares, parcimônia e inflação da variância na inferência.
+
+A proposta de @ridge
+
+
+
+
+
+
+
+## Lasso
+
+A regressão lasso surgiu com o artigo de @lasso.
+
+
+
+
+
+
+
+## Comparação das técnicas
+
+::: {style="text-align: right"}
+"You Can't Always Get What You Want"
+:::
+
+
+
+
+
+
+
+## Elastic net
+
+O artigo @en introduz o elastic net, que nada mais é que uma mistura das técnicas ridge e lasso.
+
+
+
+
+
+
+
+## Lidando com outliers
+
+```{r}
+set.seed(12345); x = rnorm(20); e = rt(20, 1); y = 2*x + e; plot(y~x); lm(y~0+x)
+```
+
+

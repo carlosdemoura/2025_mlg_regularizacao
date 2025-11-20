@@ -1,0 +1,17 @@
+{
+  "hash": "3db346b508320781935d6e4aeb7a0dcc",
+  "result": {
+    "engine": "knitr",
+    "markdown": "# Estimação\n\n::: {style=\"text-align: right\"}\nSe isto for possível,<br>\nPois, me contem,<br>\nComo escrever de novo,<br>\nUm jornal de ontem\"<br>\nTom Zé\n:::\n\nFS vs shrinkage\n\n\n::: {.cell}\n\n```{.r .cell-code}\n1+ 1\n```\n\n::: {.cell-output .cell-output-stdout}\n\n```\n[1] 2\n```\n\n\n:::\n:::\n\n",
+    "supporting": [
+      "estimação_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

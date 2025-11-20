@@ -1,0 +1,21 @@
+{
+  "hash": "c67c754b536548a2bc3ccffcd1bffefd",
+  "result": {
+    "engine": "knitr",
+    "markdown": "# Tunagem\n\nValidação cruzada\n\n\n::: {.cell}\n\n```{.r .cell-code}\n1\n```\n\n::: {.cell-output .cell-output-stdout}\n\n```\n[1] 1\n```\n\n\n:::\n:::\n\n",
+    "supporting": [
+      "tunagem_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {
+      "knitr": [
+        "{\"type\":\"list\",\"attributes\":{},\"value\":[]}"
+      ]
+    },
+    "preserve": null,
+    "postProcess": false
+  }
+}

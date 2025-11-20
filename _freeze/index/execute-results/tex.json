@@ -1,8 +1,8 @@
 {
-  "hash": "f89d2cae73031aafc1d0dc4ae48f295e",
+  "hash": "321297f7bb41e977e4f261815bbc325f",
   "result": {
     "engine": "knitr",
-    "markdown": "# Preface {.unnumbered}\n\nThis is a Quarto book.\n\nTo learn more about Quarto books visit <https://quarto.org/docs/books>.\n\n\n::: {.cell}\n\n```{.r .cell-code}\n1 + 1\n```\n\n::: {.cell-output .cell-output-stdout}\n\n```\n[1] 2\n```\n\n\n:::\n:::\n\n",
+    "markdown": "# Sobre {.unnumbered}\n\n::: {style=\"text-align: right\"}\n\"Eu tô te explicando<br>\nPra te confundir<br>\nEu tô te confundindo<br>\nPra te esclarecer\"<br>\nTom Zé\n:::\n\nEste é o [material auxiliar](https://github.com/carlosdemoura/2025_mlg_regularizacao) da apresentação do trabalho final do curso de Modelos Lineares Generalizados (MLGs) (DEST-UFMG, 2025/2).\nO tema é regularização em MLGs, em específico os métodos de regularização ridge, lasso e elastic net e este [quarto book](https://quarto.org/) está dividido da seguinte forma:\n\n* Definição de regularização e apresentação dos métodos de shrinkage, com exemplos de regressão normal;\n* Estimação dos parâmetros em MLG com penalização;\n* Tunagem dos parâmetros de regularização;\n* Exemplo prático com dados reais no R.\n\nReferências bibliográficas importantes que foram usadas para a feitura desse trabalho são citadas ao final do documento.\n\nAlguns pacotes que usaremos estão abaixo listados.\n\n\n::: {.cell}\n\n```{.r .cell-code}\nif (!{\"pak\" %in% rownames(installed.packages())}) install.packages(\"pak\")\n\npak::pak(c(\"matrixcalc\", \"glmnet\"))\n```\n:::\n\n\n",
     "supporting": [
       "index_files"
     ],

@@ -2,25 +2,31 @@ project:
   type: book
 
 book:
-  title: "2025_mlg_regularizacao"
-  author: "Norah Jones"
-  date: "11/20/2025"
+  title: "Regularização em MLGs"
+  author: "Carlos de Moura"
+  date: "12/1/2025"
   chapters:
     - index.qmd
-    - intro.qmd
-    - regularização.qmd
-    - estimação.qmd
-    - tunagem.qmd
-    - exemplos.qmd
-    - referências.qmd
+    - qmd/regularização.qmd
+    - qmd/estimação.qmd
+    - qmd/tunagem.qmd
+    - qmd/exemplo.qmd
+    - qmd/referências.qmd
 
-bibliography: references.bib
+lang: pt
+
+bibliography: qmd/references.bib
+csl: apa-5th-edition.csl
+nocite: |
+  @*
+
 
 format:
   html:
     theme:
       - cosmo
       - brand
+    code-fold: false
   pdf:
     documentclass: scrreprt
     
