@@ -1,0 +1,25 @@
+project:
+  type: book
+
+book:
+  title: "2025_mlg_regularizacao"
+  author: "Norah Jones"
+  date: "11/20/2025"
+  chapters:
+    - index.qmd
+    - intro.qmd
+    - summary.qmd
+    - references.qmd
+
+bibliography: references.bib
+
+format:
+  html:
+    theme:
+      - cosmo
+      - brand
+  pdf:
+    documentclass: scrreprt
+
+
+
