@@ -101,6 +101,7 @@ Y = X %*% beta + rnorm(n)
 ```{r}
 head(X)
 matrixcalc::is.singular.matrix(t(X)%*%X)
+eigen(t(X)%*%X)$values
 ```
 
 </details>
