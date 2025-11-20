@@ -20,6 +20,9 @@ format:
       - brand
   pdf:
     documentclass: scrreprt
+    
+execute:
+  freeze: auto
 
 
 
