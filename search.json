@@ -2,39 +2,109 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "2025_mlg_regularizacao",
+    "title": "Regularização em MLGs",
     "section": "",
-    "text": "Preface\nThis is a Quarto book.\nTo learn more about Quarto books visit https://quarto.org/docs/books.\n\n1 + 1\n\n[1] 2",
+    "text": "Sobre\n\n“Eu tô te explicando Pra te confundir Eu tô te confundindo Pra te esclarecer” Tom Zé\n\nEste é o material auxiliar da apresentação do trabalho final do curso de Modelos Lineares Generalizados (MLGs) (DEST-UFMG, 2025/2). O tema é regularização em MLGs, em específico os métodos de regularização ridge, lasso e elastic net e este quarto book está dividido da seguinte forma:\n\nDefinição de regularização e apresentação dos métodos de shrinkage, com exemplos de regressão normal;\nEstimação dos parâmetros em MLG com penalização;\nTunagem dos parâmetros de regularização;\nExemplo prático com dados reais no R.\n\nReferências bibliográficas importantes que foram usadas para a feitura desse trabalho são citadas ao final do documento.\nAlguns pacotes que usaremos estão abaixo listados.\n\nif (!{\"pak\" %in% rownames(installed.packages())}) install.packages(\"pak\")\n\npak::pak(c(\"matrixcalc\", \"glmnet\"))\n\n\n\n\n\nFriedman, J., Hastie, T., Tibshirani, R., et al. (2025). glmnet: Lasso and Elastic-Net Regularized Generalized Linear Models. Stanford University. Obtido de https://glmnet.stanford.edu/\n\n\nHoerl, A. E., & Kennard, R. W. (1970). Ridge Regression: Biased Estimation for Nonorthogonal Problems. Technometrics, 12(1), 55–67. Obtido de https://www.jstor.org/stable/1267351\n\n\nJames, G., Witten, D., Hastie, T., & Tibshirani, R. (2021). An Introduction to Statistical Learning: With Applications in R. Springer Texts em Statistics. Springer. Obtido de https://link.springer.com/book/10.1007/978-1-0716-1418-1\n\n\nKuhn, M., & Silge, J. (2022). Tidy Modeling with R. O’Reilly Media. Obtido de https://www.tmwr.org/\n\n\nR Core Team. (2024). R: A Language and Environment for Statistical Computing. Vienna, Austria: R Foundation for Statistical Computing. Obtido de https://www.r-project.org/\n\n\nTibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. Journal of the Royal Statistical Society. Series B (Methodological), 58(1), 267–288. Obtido de https://www.jstor.org/stable/2346178\n\n\nZou, H., & Hastie, T. (2005). Regularization and Variable Selection via the Elastic Net. Journal of the Royal Statistical Society. Series B (Statistical Methodology), 67(2), 301–320. Obtido de https://www.jstor.org/stable/3647580",
     "crumbs": [
-      "Preface"
+      "Sobre"
     ]
   },
   {
-    "objectID": "intro.html",
-    "href": "intro.html",
-    "title": "1  Introduction",
+    "objectID": "qmd/regularização.html",
+    "href": "qmd/regularização.html",
+    "title": "1  Regularização",
     "section": "",
-    "text": "This is a book created from markdown and executable code.\nSee Knuth (1984) for additional discussion of literate programming.\n\n1 + 1\n\n[1] 2\n\n\n\n\n\n\nKnuth, Donald E. 1984. “Literate Programming.” Comput. J. 27 (2): 97–111. https://doi.org/10.1093/comjnl/27.2.97.",
+    "text": "1.1 Seleção de variáveis naïve\nStepwise",
     "crumbs": [
-      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Introduction</span>"
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Regularização</span>"
     ]
   },
   {
-    "objectID": "summary.html",
-    "href": "summary.html",
-    "title": "2  Summary",
-    "section": "",
-    "text": "In summary, this book has no content whatsoever.\n\n1 + 1\n\n[1] 2",
+    "objectID": "qmd/regularização.html#ridge",
+    "href": "qmd/regularização.html#ridge",
+    "title": "1  Regularização",
+    "section": "1.2 Ridge",
+    "text": "1.2 Ridge\nA técnica Ridge foi a primeira das três técnicas a surgir, no trabalho de Hoerl & Kennard (1970). Originalmente, os autores buscavam entender como superar problemas em que a matriz de covariáveis \\(X\\) estava mal-especificada. Relembrando que na regressão linear normal, temos que\n\\[\nY = X \\beta + \\epsilon, \\hspace{1cm} \\epsilon \\sim N_n\\bigr( 0, \\sigma^2 I_n \\bigr)\n\\] O estimador de máxima verossimilhança (EMV) de \\(\\beta\\) será o mesmo estimador de mínimos quadrados (EMQ)\n\\[\n\\hat\\beta = (X^\\top X)^{-1} X^\\top Y,\n\\]\nse:\n\n\\(X^\\top X\\) for inversível;\nA matriz de covariáveis é ortogonalizável, i.e., os dados foram coletados de maneira independente;\nhá menos betas que observações, isto é ncol(X) &lt;&lt; nrow(X).\n\nAlém disso, \\(\\hat\\beta\\) é não viciado, consistente e tem matriz de covariâncias dada por\n\\[\ncov\\bigr(\\hat\\beta\\bigr) = \\sigma^2 (X^\\top X)^{-1}.\n\\]\nUma vez que temos a distribuição do estimador, fica fácil fazer inferência via intervalos de confiança, por exemplo.\n\\[\n\\hat\\beta \\sim N_p\\left(\\beta,\\; \\sigma^2 (X^\\top X)^{-1}\\right).\n\\]\nNesse sentido, se temos uma matriz de dados problemática - no sentido em que \\((X^\\top X)^{-1}\\) não está bem definida, teremos problema de estimação via EMQ.\nVeja o exemplo numérico abaixo.\n\nset.seed(12345)\n\nn = 10\nbeta = c(1, 0)\nX = cbind(1:n, 2*(1:n))\nY = X %*% beta + rnorm(n)\n\n\n\nVer matriz X\n\n\nhead(X)\n\n     [,1] [,2]\n[1,]    1    2\n[2,]    2    4\n[3,]    3    6\n[4,]    4    8\n[5,]    5   10\n[6,]    6   12\n\nmatrixcalc::is.singular.matrix(t(X)%*%X)\n\n[1] TRUE\n\n\n\n\npar(mfrow=c(1,2))\nplot(Y~X[,1])\nplot(Y~X[,2])\n\n\n\n\n\n\n\n\n\nlm(Y~0+X)\n\n\nCall:\nlm(formula = Y ~ 0 + X)\n\nCoefficients:\n    X1      X2  \n0.9544      NA  \n\n\n\n\nE se a regressão estivesse na outra covariável?\n\n\nset.seed(12345)\n\nbeta = c(0, 1)\nX = cbind(1:n, 2*(1:n))\nY = X %*% beta + rnorm(n)\n\nlm(Y~0+X)\n\n\nCall:\nlm(formula = Y ~ 0 + X)\n\nCoefficients:\n   X1     X2  \n1.954     NA  \n\n\nDetalhes\n\nComentários sobre o modelo não saber selecionar variáveis.\n\nset.seed(12345)\n\nbeta = c(1, 0)\nX = cbind(1:n, 2*(1:n))\nruido = cbind(rep(0,n), rnorm(n,0,.1))\nX = X + ruido\nY = X %*% beta + rnorm(n)\n\n\n\nVer matriz X\n\n\nhead(X)\n\n     [,1]      [,2]\n[1,]    1  2.058553\n[2,]    2  4.070947\n[3,]    3  5.989070\n[4,]    4  7.954650\n[5,]    5 10.060589\n[6,]    6 11.818204\n\nmatrixcalc::is.singular.matrix(t(X)%*%X)\n\n[1] FALSE\n\n\n\n\nlm(Y~0+X)\n\n\nCall:\nlm(formula = Y ~ 0 + X)\n\nCoefficients:\n    X1      X2  \n 6.658  -2.820  \n\n\nComentários sobre combinações lineares, parcimônia e inflação da variância na inferência.\nA proposta de Hoerl & Kennard (1970)",
     "crumbs": [
-      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Summary</span>"
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Regularização</span>"
     ]
   },
   {
-    "objectID": "references.html",
-    "href": "references.html",
+    "objectID": "qmd/regularização.html#lasso",
+    "href": "qmd/regularização.html#lasso",
+    "title": "1  Regularização",
+    "section": "1.3 Lasso",
+    "text": "1.3 Lasso\nA regressão lasso surgiu com o artigo de Tibshirani (1996).",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Regularização</span>"
+    ]
+  },
+  {
+    "objectID": "qmd/regularização.html#comparação-das-técnicas",
+    "href": "qmd/regularização.html#comparação-das-técnicas",
+    "title": "1  Regularização",
+    "section": "1.4 Comparação das técnicas",
+    "text": "1.4 Comparação das técnicas\n\n“You Can’t Always Get What You Want”",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Regularização</span>"
+    ]
+  },
+  {
+    "objectID": "qmd/regularização.html#elastic-net",
+    "href": "qmd/regularização.html#elastic-net",
+    "title": "1  Regularização",
+    "section": "1.5 Elastic net",
+    "text": "1.5 Elastic net\nO artigo Zou & Hastie (2005) introduz o elastic net, que nada mais é que uma mistura das técnicas ridge e lasso.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Regularização</span>"
+    ]
+  },
+  {
+    "objectID": "qmd/regularização.html#lidando-com-outliers",
+    "href": "qmd/regularização.html#lidando-com-outliers",
+    "title": "1  Regularização",
+    "section": "1.6 Lidando com outliers",
+    "text": "1.6 Lidando com outliers\n\nset.seed(12345); x = rnorm(20); e = rt(20, 1); y = 2*x + e; plot(y~x); lm(y~0+x)\n\n\n\n\n\n\n\n\n\nCall:\nlm(formula = y ~ 0 + x)\n\nCoefficients:\n    x  \n6.136  \n\n\n\n\n\n\nFriedman, J., Hastie, T., Tibshirani, R., et al. (2025). glmnet: Lasso and Elastic-Net Regularized Generalized Linear Models. Stanford University. Obtido de https://glmnet.stanford.edu/\n\n\nHoerl, A. E., & Kennard, R. W. (1970). Ridge Regression: Biased Estimation for Nonorthogonal Problems. Technometrics, 12(1), 55–67. Obtido de https://www.jstor.org/stable/1267351\n\n\nJames, G., Witten, D., Hastie, T., & Tibshirani, R. (2021). An Introduction to Statistical Learning: With Applications in R. Springer Texts em Statistics. Springer. Obtido de https://link.springer.com/book/10.1007/978-1-0716-1418-1\n\n\nKuhn, M., & Silge, J. (2022). Tidy Modeling with R. O’Reilly Media. Obtido de https://www.tmwr.org/\n\n\nR Core Team. (2024). R: A Language and Environment for Statistical Computing. Vienna, Austria: R Foundation for Statistical Computing. Obtido de https://www.r-project.org/\n\n\nTibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. Journal of the Royal Statistical Society. Series B (Methodological), 58(1), 267–288. Obtido de https://www.jstor.org/stable/2346178\n\n\nZou, H., & Hastie, T. (2005). Regularization and Variable Selection via the Elastic Net. Journal of the Royal Statistical Society. Series B (Statistical Methodology), 67(2), 301–320. Obtido de https://www.jstor.org/stable/3647580",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Regularização</span>"
+    ]
+  },
+  {
+    "objectID": "qmd/estimação.html",
+    "href": "qmd/estimação.html",
+    "title": "2  Estimação",
+    "section": "",
+    "text": "“Se isto for possível, Pois, me contem, Como escrever de novo, Um jornal de ontem” Tom Zé\n\nFS vs shrinkage\n\n1+ 1\n\n[1] 2\n\n\n\n\n\n\nFriedman, J., Hastie, T., Tibshirani, R., et al. (2025). glmnet: Lasso and Elastic-Net Regularized Generalized Linear Models. Stanford University. Obtido de https://glmnet.stanford.edu/\n\n\nHoerl, A. E., & Kennard, R. W. (1970). Ridge Regression: Biased Estimation for Nonorthogonal Problems. Technometrics, 12(1), 55–67. Obtido de https://www.jstor.org/stable/1267351\n\n\nJames, G., Witten, D., Hastie, T., & Tibshirani, R. (2021). An Introduction to Statistical Learning: With Applications in R. Springer Texts em Statistics. Springer. Obtido de https://link.springer.com/book/10.1007/978-1-0716-1418-1\n\n\nKuhn, M., & Silge, J. (2022). Tidy Modeling with R. O’Reilly Media. Obtido de https://www.tmwr.org/\n\n\nR Core Team. (2024). R: A Language and Environment for Statistical Computing. Vienna, Austria: R Foundation for Statistical Computing. Obtido de https://www.r-project.org/\n\n\nTibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. Journal of the Royal Statistical Society. Series B (Methodological), 58(1), 267–288. Obtido de https://www.jstor.org/stable/2346178\n\n\nZou, H., & Hastie, T. (2005). Regularization and Variable Selection via the Elastic Net. Journal of the Royal Statistical Society. Series B (Statistical Methodology), 67(2), 301–320. Obtido de https://www.jstor.org/stable/3647580",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Estimação</span>"
+    ]
+  },
+  {
+    "objectID": "qmd/tunagem.html",
+    "href": "qmd/tunagem.html",
+    "title": "3  Tunagem",
+    "section": "",
+    "text": "Validação cruzada\n\n1\n\n[1] 1\n\n\n\n\n\n\nFriedman, J., Hastie, T., Tibshirani, R., et al. (2025). glmnet: Lasso and Elastic-Net Regularized Generalized Linear Models. Stanford University. Obtido de https://glmnet.stanford.edu/\n\n\nHoerl, A. E., & Kennard, R. W. (1970). Ridge Regression: Biased Estimation for Nonorthogonal Problems. Technometrics, 12(1), 55–67. Obtido de https://www.jstor.org/stable/1267351\n\n\nJames, G., Witten, D., Hastie, T., & Tibshirani, R. (2021). An Introduction to Statistical Learning: With Applications in R. Springer Texts em Statistics. Springer. Obtido de https://link.springer.com/book/10.1007/978-1-0716-1418-1\n\n\nKuhn, M., & Silge, J. (2022). Tidy Modeling with R. O’Reilly Media. Obtido de https://www.tmwr.org/\n\n\nR Core Team. (2024). R: A Language and Environment for Statistical Computing. Vienna, Austria: R Foundation for Statistical Computing. Obtido de https://www.r-project.org/\n\n\nTibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. Journal of the Royal Statistical Society. Series B (Methodological), 58(1), 267–288. Obtido de https://www.jstor.org/stable/2346178\n\n\nZou, H., & Hastie, T. (2005). Regularization and Variable Selection via the Elastic Net. Journal of the Royal Statistical Society. Series B (Statistical Methodology), 67(2), 301–320. Obtido de https://www.jstor.org/stable/3647580",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Tunagem</span>"
+    ]
+  },
+  {
+    "objectID": "qmd/exemplo.html",
+    "href": "qmd/exemplo.html",
+    "title": "4  Exemplo prático",
+    "section": "",
+    "text": "Esparsidade, multicolinearidade e outliers\n\n1\n\n[1] 1\n\n\n\n\n\n\nFriedman, J., Hastie, T., Tibshirani, R., et al. (2025). glmnet: Lasso and Elastic-Net Regularized Generalized Linear Models. Stanford University. Obtido de https://glmnet.stanford.edu/\n\n\nHoerl, A. E., & Kennard, R. W. (1970). Ridge Regression: Biased Estimation for Nonorthogonal Problems. Technometrics, 12(1), 55–67. Obtido de https://www.jstor.org/stable/1267351\n\n\nJames, G., Witten, D., Hastie, T., & Tibshirani, R. (2021). An Introduction to Statistical Learning: With Applications in R. Springer Texts em Statistics. Springer. Obtido de https://link.springer.com/book/10.1007/978-1-0716-1418-1\n\n\nKuhn, M., & Silge, J. (2022). Tidy Modeling with R. O’Reilly Media. Obtido de https://www.tmwr.org/\n\n\nR Core Team. (2024). R: A Language and Environment for Statistical Computing. Vienna, Austria: R Foundation for Statistical Computing. Obtido de https://www.r-project.org/\n\n\nTibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. Journal of the Royal Statistical Society. Series B (Methodological), 58(1), 267–288. Obtido de https://www.jstor.org/stable/2346178\n\n\nZou, H., & Hastie, T. (2005). Regularization and Variable Selection via the Elastic Net. Journal of the Royal Statistical Society. Series B (Statistical Methodology), 67(2), 301–320. Obtido de https://www.jstor.org/stable/3647580",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Exemplo prático</span>"
+    ]
+  },
+  {
+    "objectID": "qmd/referências.html",
+    "href": "qmd/referências.html",
     "title": "References",
     "section": "",
-    "text": "Knuth, Donald E. 1984. “Literate Programming.” Comput.\nJ. 27 (2): 97–111. https://doi.org/10.1093/comjnl/27.2.97.",
+    "text": "Friedman, J., Hastie, T., Tibshirani, R., et al. (2025). Glmnet:\nLasso and elastic-net regularized generalized linear models.\nStanford University. Retrieved from https://glmnet.stanford.edu/\n\n\nHoerl, A. E., & Kennard, R. W. (1970). Ridge regression: Biased\nestimation for nonorthogonal problems. Technometrics,\n12(1), 55–67. Retrieved from https://www.jstor.org/stable/1267351\n\n\nJames, G., Witten, D., Hastie, T., & Tibshirani, R. (2021). An\nintroduction to statistical learning: With applications in r.\nSpringer texts in statistics. Springer. Retrieved from https://link.springer.com/book/10.1007/978-1-0716-1418-1\n\n\nKuhn, M., & Silge, J. (2022). Tidy modeling with r.\nO’Reilly Media. Retrieved from https://www.tmwr.org/\n\n\nR Core Team. (2024). R: A language and environment for statistical\ncomputing. Vienna, Austria: R Foundation for Statistical Computing.\nRetrieved from https://www.r-project.org/\n\n\nTibshirani, R. (1996). Regression shrinkage and selection via the lasso.\nJournal of the Royal Statistical Society. Series B\n(Methodological), 58(1), 267–288. Retrieved from https://www.jstor.org/stable/2346178\n\n\nZou, H., & Hastie, T. (2005). Regularization and variable selection\nvia the elastic net. Journal of the Royal Statistical Society.\nSeries B (Statistical Methodology), 67(2), 301–320.\nRetrieved from https://www.jstor.org/stable/3647580",
     "crumbs": [
       "References"
     ]
