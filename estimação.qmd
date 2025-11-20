@@ -1,0 +1,7 @@
+# Estimação
+
+FS vs shrinkage
+
+```{r}
+1+ 1
+```

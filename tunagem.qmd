@@ -1,0 +1,7 @@
+# Tunagem
+
+Validação cruzada
+
+```{r}
+1
+```

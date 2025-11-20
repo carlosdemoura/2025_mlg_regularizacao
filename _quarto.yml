@@ -8,8 +8,11 @@ book:
   chapters:
     - index.qmd
     - intro.qmd
-    - summary.qmd
-    - references.qmd
+    - regularização.qmd
+    - estimação.qmd
+    - tunagem.qmd
+    - exemplos.qmd
+    - referências.qmd
 
 bibliography: references.bib
 

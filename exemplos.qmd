@@ -1,0 +1,7 @@
+# Exemplos
+
+Esparsidade, multicolinearidade e outliers
+
+```{r}
+1
+```

@@ -1,4 +1,11 @@
-# Preface {.unnumbered}
+# Capa {.unnumbered}
+
+::: {style="text-align: right"}
+"Eu tô te explicando
+Pra te confundir
+Eu tô te confundindo
+Pra te esclarecer"
+:::
 
 This is a Quarto book.
 
