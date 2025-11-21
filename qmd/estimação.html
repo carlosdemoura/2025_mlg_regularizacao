@@ -337,11 +337,47 @@ window.Quarto = {
 </section>
 <section id="regularização-nos-mlgs" class="level2" data-number="2.3">
 <h2 data-number="2.3" class="anchored" data-anchor-id="regularização-nos-mlgs"><span class="header-section-number">2.3</span> Regularização nos MLGs</h2>
-<p>FS vs shrinkage</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span><span class="sc">+</span> <span class="dv">1</span></span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<p>O modelo linear normal pode ser especificado diretamente por meio de seus resíduos, mas - em geral - isso não é possível em todos os MLGs. Aqui, apresentaremos a técnica descrita em <span class="citation" data-cites="en_glm">Tay, Narasimhan, &amp; Hastie (<a href="referências.html#ref-en_glm" role="doc-biblioref">2023</a>)</span>, que generaliza a regularização elastic net para os MLGs. Grosso modo, em vez de minimizar a SQRes penalizada (que nem sempre está bem definida), vamos minimizar o inverso aditivo da log-verossimilhança penalizada (que sempre está bem definida num MLG).</p>
+<p><span class="math display">\[
+(\hat{\beta}_0, \hat{\beta})
+= \arg\min_{\beta_0,\beta}
+\left\{
+  -\frac{1}{n}\sum_{i=1}^n \text{loglik}\left(y_i, X \beta \right) + P_{\alpha, \lambda}(\beta)
+\right\},
+\]</span></p>
+<p>onde <span class="math inline">\(P_{\alpha, \lambda}(\beta)\)</span> é a função de penalização elastic net, ou seja <span class="math display">\[
+P_{\alpha, \lambda}(\beta) =
+\lambda \left( \frac{1 - \alpha}{2}  \sum_{j=1}^p \beta_j^2 + \alpha\sum_{j=1}^p |\beta_j| \right).
+\]</span></p>
+<p>Com isso, temos um algoritmo de mínimos quadrados ponderados (IRLS) dado a seguir.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>IRLS elastic net
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Selecione um valor de <span class="math inline">\(\alpha \in [0,1]\)</span> e valor de <span class="math inline">\(\lambda \in \mathbb R\)</span>.</p>
+<p>Inicialize o algritmo com <span class="math inline">\((\hat\beta_0^{(0)}, \hat\beta^{(0)}) = (0,0)\)</span>. Doravante para <span class="math inline">\(t = 1, 2, \dots\)</span> (até que se atinja convergência) faça:</p>
+<ol type="1">
+<li><p>Compute <span class="math inline">\(\eta_i^{(t)} = \hat{\beta}^{(t)}_0(\lambda) + x_i^{\top} \hat{\beta}^{(t)}(\lambda)\)</span> e <span class="math inline">\(\mu_i^{(t)} = g^{-1}(\eta_i^{(t)})\)</span>, para <span class="math inline">\(i \in 1:n\)</span>;</p></li>
+<li><p>Compute <span class="math inline">\(z_i^{(t)} = \eta_i^{(t)} + (y_i - \mu_i^{(t)}) \left( \frac{d\mu_i^{(t)}}{d\eta_i^{(t)}} \right)\)</span> e também <span class="math inline">\(w_i^{(t)} = \frac{1}{V(\mu_i^{(t)})} \left( \frac{d\mu_i^{(t)}}{d\eta_i^{(t)}} \right)^2\)</span>, para <span class="math inline">\(i \in 1:n\)</span>;</p></li>
+<li><p>Resolva</p></li>
+</ol>
+<p><span class="math display">\[
+\Bigr(\hat{\beta}^{(t+1)}_0(\lambda),\ \hat{\beta}^{(t+1)}(\lambda)\Bigr)
+=
+\arg\min_{\beta_0, \beta}
+\left\{
+\frac{1}{2n}
+\sum_{i=1}^n w_i^{(t)}
+\bigl( z_i^{(t)} - X \beta \bigr)^2
++ P_{\alpha, \lambda}(\beta)
+\right].
+\]</span></p>
 </div>
 </div>
 </section>
