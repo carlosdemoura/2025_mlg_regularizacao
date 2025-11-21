@@ -273,6 +273,7 @@ window.Quarto = {
 </div>
 <section id="regularização-como-uma-função-de-perda" class="level2" data-number="2.1">
 <h2 data-number="2.1" class="anchored" data-anchor-id="regularização-como-uma-função-de-perda"><span class="header-section-number">2.1</span> Regularização como uma função de perda</h2>
+<p>Até agora vimos exemplos de como a regularização pode ser vista como uma função de perda na estimação de mínimos quadrados. Essa ideia pode ser estendida para a estimação via máxima verossimilhança (como veremos adiante). Antes disso, mostraremos um exemplo de como a regressão ridge e lasso diminuem os coeficiente na prática.</p>
 </section>
 <section id="regularização-como-uma-restrição-do-espaço-paramétrico" class="level2" data-number="2.2">
 <h2 data-number="2.2" class="anchored" data-anchor-id="regularização-como-uma-restrição-do-espaço-paramétrico"><span class="header-section-number">2.2</span> Regularização como uma restrição do espaço paramétrico</h2>
@@ -376,7 +377,7 @@ P_{\alpha, \lambda}(\beta) =
 \sum_{i=1}^n w_i^{(t)}
 \bigl( z_i^{(t)} - X \beta \bigr)^2
 + P_{\alpha, \lambda}(\beta)
-\right].
+\right\}
 \]</span></p>
 </div>
 </div>
