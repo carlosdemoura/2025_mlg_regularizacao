@@ -226,7 +226,7 @@ window.Quarto = {
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../qmd/referências.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">References</span></a>
+ <span class="menu-text">Referências</span></a>
   </div>
 </li>
     </ul>
@@ -239,8 +239,10 @@ window.Quarto = {
     <h2 id="toc-title">Índice</h2>
    
   <ul>
-  <li><a href="#regularização-como-uma-restrição-do-espaço-paramétrico" id="toc-regularização-como-uma-restrição-do-espaço-paramétrico" class="nav-link active" data-scroll-target="#regularização-como-uma-restrição-do-espaço-paramétrico"><span class="header-section-number">2.1</span> Regularização como uma restrição do espaço paramétrico</a></li>
-  <li><a href="#regularização-nos-mlgs" id="toc-regularização-nos-mlgs" class="nav-link" data-scroll-target="#regularização-nos-mlgs"><span class="header-section-number">2.2</span> Regularização nos MLGs</a></li>
+  <li><a href="#regularização-como-uma-função-de-perda" id="toc-regularização-como-uma-função-de-perda" class="nav-link active" data-scroll-target="#regularização-como-uma-função-de-perda"><span class="header-section-number">2.1</span> Regularização como uma função de perda</a></li>
+  <li><a href="#regularização-como-uma-restrição-do-espaço-paramétrico" id="toc-regularização-como-uma-restrição-do-espaço-paramétrico" class="nav-link" data-scroll-target="#regularização-como-uma-restrição-do-espaço-paramétrico"><span class="header-section-number">2.2</span> Regularização como uma restrição do espaço paramétrico</a></li>
+  <li><a href="#regularização-nos-mlgs" id="toc-regularização-nos-mlgs" class="nav-link" data-scroll-target="#regularização-nos-mlgs"><span class="header-section-number">2.3</span> Regularização nos MLGs</a></li>
+  <li><a href="#estudo-bootstrap" id="toc-estudo-bootstrap" class="nav-link" data-scroll-target="#estudo-bootstrap"><span class="header-section-number">2.4</span> Estudo Bootstrap</a></li>
   </ul>
 </nav>
     </div>
@@ -269,10 +271,13 @@ window.Quarto = {
 <div style="text-align: right">
 <p>“Se isto for possível,<br> Pois, me contem,<br> Como escrever de novo,<br> Um jornal de ontem”<br> Tom Zé</p>
 </div>
-<section id="regularização-como-uma-restrição-do-espaço-paramétrico" class="level2" data-number="2.1">
-<h2 data-number="2.1" class="anchored" data-anchor-id="regularização-como-uma-restrição-do-espaço-paramétrico"><span class="header-section-number">2.1</span> Regularização como uma restrição do espaço paramétrico</h2>
+<section id="regularização-como-uma-função-de-perda" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="regularização-como-uma-função-de-perda"><span class="header-section-number">2.1</span> Regularização como uma função de perda</h2>
+</section>
+<section id="regularização-como-uma-restrição-do-espaço-paramétrico" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="regularização-como-uma-restrição-do-espaço-paramétrico"><span class="header-section-number">2.2</span> Regularização como uma restrição do espaço paramétrico</h2>
 <p>É possível entender cada um dos processos de regularização descritos anteriormente como uma restrição do espaço paramétrico dos coeficientes de regressão. Se não fazer seleção é considerer que <span class="math inline">\(\beta \in \mathbb R^d\)</span>, é possível mostrar que - escolhidos os parâmetros de shrinkage - então minimar a soma de quadrados do resíduo penalizada é a mesma coisa que minimizar a soma de quadrado da regressão num espaço paramétrico menor (que depende dos parâmetros de shrinkage escolhidos).</p>
-<p>Seja <span class="math inline">\(SQRes = (Y - X\beta)^\top(Y - X\beta)= \sum_{i=1}^n \left( y_i - \beta_0 - \sum_{j=1}^p \beta_j x_{ij} \right)^2\)</span>, então (na regressão linear normal) vale que:</p>
+<p>Assim, (na regressão linear normal) vale que:</p>
 <p><span class="math display">\[
 \hat\beta_{ridge} =
 \arg\min_{\beta} \{SQRes\}
@@ -330,8 +335,8 @@ window.Quarto = {
 </div>
 </div>
 </section>
-<section id="regularização-nos-mlgs" class="level2" data-number="2.2">
-<h2 data-number="2.2" class="anchored" data-anchor-id="regularização-nos-mlgs"><span class="header-section-number">2.2</span> Regularização nos MLGs</h2>
+<section id="regularização-nos-mlgs" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="regularização-nos-mlgs"><span class="header-section-number">2.3</span> Regularização nos MLGs</h2>
 <p>FS vs shrinkage</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span><span class="sc">+</span> <span class="dv">1</span></span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
@@ -339,9 +344,16 @@ window.Quarto = {
 <pre><code>[1] 2</code></pre>
 </div>
 </div>
+</section>
+<section id="estudo-bootstrap" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="estudo-bootstrap"><span class="header-section-number">2.4</span> Estudo Bootstrap</h2>
+<p>A</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list" style="display: none">
+<div id="ref-en_glm2" class="csl-entry" role="listitem">
+Friedman, J. H., Hastie, T., &amp; Tibshirani, R. (2010). Regularization Paths for Generalized Linear Models via Coordinate Descent. <em>Journal of Statistical Software</em>, <em>33</em>(1), 1–22. Obtido de <a href="https://www.jstatsoft.org/index.php/jss/article/view/v033i01">https://www.jstatsoft.org/index.php/jss/article/view/v033i01</a>
+</div>
 <div id="ref-glmnet" class="csl-entry" role="listitem">
 Friedman, J., Hastie, T., Tibshirani, R., et al. (2025). <em>glmnet: Lasso and Elastic-Net Regularized Generalized Linear Models</em>. Stanford University. Obtido de <a href="https://glmnet.stanford.edu/">https://glmnet.stanford.edu/</a>
 </div>
@@ -356,6 +368,9 @@ Kuhn, M., &amp; Silge, J. (2022). <em>Tidy Modeling with R</em>. O’Reilly Medi
 </div>
 <div id="ref-R" class="csl-entry" role="listitem">
 R Core Team. (2024). <em>R: A Language and Environment for Statistical Computing</em>. Vienna, Austria: R Foundation for Statistical Computing. Obtido de <a href="https://www.r-project.org/">https://www.r-project.org/</a>
+</div>
+<div id="ref-en_glm" class="csl-entry" role="listitem">
+Tay, J. K., Narasimhan, B., &amp; Hastie, T. (2023). Elastic Net Regularization Paths for All Generalized Linear Models. <em>Journal of Statistical Software</em>, <em>106</em>(1), 1–31. Obtido de <a href="https://www.jstatsoft.org/article/view/v106i01">https://www.jstatsoft.org/article/view/v106i01</a>
 </div>
 <div id="ref-lasso" class="csl-entry" role="listitem">
 Tibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. <em>Journal of the Royal Statistical Society. Series B (Methodological)</em>, <em>58</em>(1), 267–288. Obtido de <a href="https://www.jstor.org/stable/2346178">https://www.jstor.org/stable/2346178</a>

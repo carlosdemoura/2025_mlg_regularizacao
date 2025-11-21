@@ -226,7 +226,7 @@ window.Quarto = {
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../qmd/referências.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">References</span></a>
+ <span class="menu-text">Referências</span></a>
   </div>
 </li>
     </ul>
@@ -242,7 +242,10 @@ window.Quarto = {
   <li><a href="#seleção-de-variáveis-naïve" id="toc-seleção-de-variáveis-naïve" class="nav-link active" data-scroll-target="#seleção-de-variáveis-naïve"><span class="header-section-number">1.1</span> Seleção de variáveis naïve</a></li>
   <li><a href="#ridge" id="toc-ridge" class="nav-link" data-scroll-target="#ridge"><span class="header-section-number">1.2</span> Ridge</a></li>
   <li><a href="#lasso" id="toc-lasso" class="nav-link" data-scroll-target="#lasso"><span class="header-section-number">1.3</span> Lasso</a></li>
-  <li><a href="#comparação-das-técnicas" id="toc-comparação-das-técnicas" class="nav-link" data-scroll-target="#comparação-das-técnicas"><span class="header-section-number">1.4</span> Comparação das técnicas</a></li>
+  <li><a href="#comparação-das-técnicas" id="toc-comparação-das-técnicas" class="nav-link" data-scroll-target="#comparação-das-técnicas"><span class="header-section-number">1.4</span> Comparação das técnicas</a>
+  <ul class="collapse">
+  <li><a href="#estudo-sobre-mse-com-dados-sintéticos" id="toc-estudo-sobre-mse-com-dados-sintéticos" class="nav-link" data-scroll-target="#estudo-sobre-mse-com-dados-sintéticos"><span class="header-section-number">1.4.1</span> Estudo sobre MSE com dados sintéticos</a></li>
+  </ul></li>
   <li><a href="#elastic-net" id="toc-elastic-net" class="nav-link" data-scroll-target="#elastic-net"><span class="header-section-number">1.5</span> Elastic net</a></li>
   <li><a href="#lidando-com-outliers" id="toc-lidando-com-outliers" class="nav-link" data-scroll-target="#lidando-com-outliers"><span class="header-section-number">1.6</span> Lidando com outliers</a></li>
   </ul>
@@ -359,9 +362,12 @@ cov\bigr(\hat\beta\bigr) = \sigma^2 (X^\top X)^{-1}.
 </div>
 </details>
 <div class="cell">
+<details class="code-fold">
+<summary>Código</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(Y<span class="sc">~</span>X[,<span class="dv">1</span>])</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(Y<span class="sc">~</span>X[,<span class="dv">2</span>])</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -458,33 +464,286 @@ Coefficients:
 </div>
 </div>
 <p>Comentários sobre combinações lineares, parcimônia e inflação da variância na inferência.</p>
-<p>A proposta de <span class="citation" data-cites="ridge">Hoerl &amp; Kennard (<a href="referências.html#ref-ridge" role="doc-biblioref">1970</a>)</span></p>
+<p>A proposta de <span class="citation" data-cites="ridge">Hoerl &amp; Kennard (<a href="referências.html#ref-ridge" role="doc-biblioref">1970</a>)</span> é adicionar um certo múltiplo da matriz identidade à <span class="math inline">\(X^\top X\)</span>, de modo que seja possível superar os problemas de uma matriz <span class="math inline">\(X\)</span> mal especificada. <span class="citation" data-cites="islr">James, Witten, Hastie, &amp; Tibshirani (<a href="referências.html#ref-islr" role="doc-biblioref">2021</a>)</span> mostra que isso é equivalente a adicionar uma punição no processo de estimação por mínimos quadrados. Seja <span class="math inline">\(SQRes = (Y - X\beta)^\top(Y - X\beta)= \sum_{i=1}^n \left( y_i - \beta_0 - \sum_{j=1}^p \beta_j x_{ij} \right)^2\)</span>, assim:</p>
+<p><span class="math display">\[
+\hat\beta_{ridge} =
+\arg\min_{\beta} \left\{ SQRes + \lambda_{ridge}\sum_{j=1}^p \beta_j^2 \right\},
+\]</span></p>
+<p>em que <span class="math inline">\(\lambda_{ridge}\)</span> é uma constante positiva (escolhida pelo pesquisador) que dá o peso dessa punição.</p>
+<p>Note que:</p>
+<ul>
+<li>À medida que <span class="math inline">\(\lambda\)</span> cresce menores ficam as estimativas dos betas, <span class="math inline">\(\hat\beta_{ridge} \rightarrow 0,\ \lambda_{ridge} \rightarrow \infty\)</span>.</li>
+<li>Não faz sentido incluir o intercepto no processo de shrinkage, pois <span class="math inline">\(g(\beta_0)\)</span> é o valor esperado da variável resposta dado que as demais covariáveis são zero, em que <span class="math inline">\(g\)</span> é uma função de ligação.</li>
+<li>Fica claro que a depender do valor de <span class="math inline">\(\lambda\)</span> que escolhemos, estamos incluindo algum viés no modelo.</li>
+<li>A estimação ridge diminui as estimativas dos betas na mesma proporção (se comparada com o MMQ tradicional).</li>
+<li>Em diminuindo a estimativa dos betas, diminui-se também a variância envolvida nas estimativas dos parâmetros.</li>
+</ul>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Aviso
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Ao usar métodos de regularização, estamos fazendo um trade-off entre variância e viés. Grosso modo, estamos inserido algum viés em nossas estimativas, a fim de diminuir a variância na estimação dos parâmetros e assim fazer inferências mais precisas.</p>
+<p>Um bom método de escolha do parâmetro de shrinkage é crucial para o bom funcionamento da estimação ridge. Falaremos disso nas próximas seções. <em>Spoiler: faremos validação cruzada.</em></p>
+</div>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="https://neuroimaging-data-science.org/content/007-ml/005-model-selection.html"><img src="../img/bias_variance_dartboard.png" class="img-fluid figure-img" style="width:60.0%"></a></p>
+<figcaption>Analogia dos dardos para pensar variância e viés.</figcaption>
+</figure>
+</div>
+<p>O exemplo abaixo está no livro <span class="citation" data-cites="islr">James et al. (<a href="referências.html#ref-islr" role="doc-biblioref">2021</a>)</span>, <code>Credit</code> é um conjunto de dados incluído no pacote ISLR, contendo informações sobre 4000 clientes de um banco, com o objetivo de modelar e entender fatores associados ao limite de crédito de cada pessoa.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="https://www.statlearning.com/"><img src="../img/islr_ridge.png" class="img-fluid figure-img" style="width:90.0%"></a></p>
+<figcaption>Exemplo de regressão ridge.</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Padronização das covariáveis
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A técnica ridge pode ser muito sensível à escala das covariáveis. Nesse sentido, vale a pena padronizar as covariáveis pelo desvio-padrão para evitar a influência desse efeito.</p>
+</div>
+</div>
 </section>
 <section id="lasso" class="level2" data-number="1.3">
 <h2 data-number="1.3" class="anchored" data-anchor-id="lasso"><span class="header-section-number">1.3</span> Lasso</h2>
-<p>A regressão lasso surgiu com o artigo de <span class="citation" data-cites="lasso">Tibshirani (<a href="referências.html#ref-lasso" role="doc-biblioref">1996</a>)</span>.</p>
+<p>A regressão lasso surgiu com o artigo de <span class="citation" data-cites="lasso">Tibshirani (<a href="referências.html#ref-lasso" role="doc-biblioref">1996</a>)</span>. No caso da regressão linear normal, a diferença entre lasso e ridge pode ser vista na função de perda da estimação mínimos quadrados. Em vez de usar a norma <span class="math inline">\(\ell_2\)</span> (como faz a regressão ridge), a regressão lasso usa a norma <span class="math inline">\(\ell_1\)</span> de beta.</p>
+<p><span class="math display">\[
+\hat\beta_{lasso} =
+\arg\min_{\beta} \left\{ SQRes + \lambda_{lasso}\sum_{j=1}^p |\beta_j| \right\},
+\]</span></p>
+<p>Muitas das observações que fizemos para a estimação ridge se aplicam tambpem à regressão lasso. A principal diferênça entre essas técnicas está no fato que a regressão lasso faz, de fato, uma seleção de variáveis. Isso se dá pois a regressão lasso pode zerar os coeficientes de algumas covariáveis.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Nota
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>O fato de a regressão lasso poder zerar os coeficientes das covariáveis está associado com a geometria imposta no espaço paramétrico. <a href="https://www.statlearning.com/"><img src="../img/islr_corner.png" class="img-fluid" style="width:90.0%" alt="James et al. (2021) pg. 222."></a></p>
+</div>
+</div>
+</div>
+<p>No mesmo banco de dados <code>Credit</code>, <span class="citation" data-cites="islr">James et al. (<a href="referências.html#ref-islr" role="doc-biblioref">2021</a>)</span> aplicou a regressão lasso:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="https://www.statlearning.com/"><img src="../img/islr_lasso.png" class="img-fluid figure-img" style="width:90.0%"></a></p>
+<figcaption>Exemplo de regressão lasso.</figcaption>
+</figure>
+</div>
 </section>
 <section id="comparação-das-técnicas" class="level2" data-number="1.4">
 <h2 data-number="1.4" class="anchored" data-anchor-id="comparação-das-técnicas"><span class="header-section-number">1.4</span> Comparação das técnicas</h2>
 <div style="text-align: right">
 <p>“You Can’t Always Get What You Want”</p>
 </div>
+<p>A</p>
+<section id="estudo-sobre-mse-com-dados-sintéticos" class="level3" data-number="1.4.1">
+<h3 data-number="1.4.1" class="anchored" data-anchor-id="estudo-sobre-mse-com-dados-sintéticos"><span class="header-section-number">1.4.1</span> Estudo sobre MSE com dados sintéticos</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>sqres <span class="ot">=</span> <span class="cf">function</span>(beta, X, Y) {</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">=</span> Y <span class="sc">-</span> X <span class="sc">%*%</span> beta</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop</span>(<span class="fu">crossprod</span>(res))</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>sqres_ridge <span class="ot">=</span> <span class="cf">function</span>(beta, X, Y, lambda) {</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">=</span> Y <span class="sc">-</span> X <span class="sc">%*%</span> beta</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop</span>(<span class="fu">crossprod</span>(res) <span class="sc">+</span> lambda <span class="sc">*</span> <span class="fu">crossprod</span>(beta))</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>sqres_lasso <span class="ot">=</span> <span class="cf">function</span>(beta, X, Y, lambda) {</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">=</span> Y <span class="sc">-</span> X <span class="sc">%*%</span> beta</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop</span>(<span class="fu">crossprod</span>(res) <span class="sc">+</span> lambda <span class="sc">*</span> <span class="fu">sum</span>(<span class="fu">abs</span>(beta)))</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>A</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Nota
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Note que minimizar <code>sqres</code> deve dar o mesmo resultado que <code>lm</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">optim</span>(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">fn     =</span> sqres,</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">X      =</span> X,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Y      =</span> Y,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(fit<span class="sc">$</span>par, <span class="dv">5</span>) <span class="sc">|&gt;</span> <span class="st">`</span><span class="at">names&lt;-</span><span class="st">`</span>(<span class="fu">paste0</span>(<span class="st">"X"</span>, <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(X)))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      X1       X2 
+ 6.65825 -2.81988 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Y ~ 0 + X)
+
+Coefficients:
+    X1      X2  
+ 6.658  -2.820  </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">20</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">exp</span>(<span class="sc">-</span><span class="fu">seq</span>(<span class="sc">-</span><span class="dv">2</span>,<span class="dv">2</span>,.<span class="dv">5</span>)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">rnorm</span>(n<span class="sc">*</span><span class="fu">length</span>(beta)) <span class="sc">|&gt;</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> n, <span class="at">ncol =</span> <span class="fu">length</span>(beta))</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n,<span class="dv">0</span>,<span class="dv">1</span>)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>mse_ridge <span class="ot">=</span> mse_lasso <span class="ot">=</span> <span class="fu">numeric</span>()</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (lambda <span class="cf">in</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">20</span>) {</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  beta_ridge <span class="ot">=</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_ridge,</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> lambda,</span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>    mse_ridge[lambda <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">=</span> <span class="fu">mean</span>((beta_ridge <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>  beta_lasso <span class="ot">=</span></span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_lasso,</span>
+<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
+<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
+<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> lambda,</span>
+<span id="cb26-29"><a href="#cb26-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb26-30"><a href="#cb26-30" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
+<span id="cb26-31"><a href="#cb26-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-32"><a href="#cb26-32" aria-hidden="true" tabindex="-1"></a>    mse_lasso[lambda <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">=</span> <span class="fu">mean</span>((beta_lasso <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb26-33"><a href="#cb26-33" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb26-34"><a href="#cb26-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-35"><a href="#cb26-35" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mse_ridge,  <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">1</span>,</span>
+<span id="cb26-36"><a href="#cb26-36" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.1</span>),</span>
+<span id="cb26-37"><a href="#cb26-37" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"MSE"</span>, <span class="at">xlab =</span> <span class="st">"lambda"</span>)</span>
+<span id="cb26-38"><a href="#cb26-38" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(mse_lasso, <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">2</span>, <span class="at">lty =</span> <span class="st">"aa"</span>)</span>
+<span id="cb26-39"><a href="#cb26-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-40"><a href="#cb26-40" aria-hidden="true" tabindex="-1"></a>mse_lm <span class="ot">=</span> <span class="fu">mean</span>((<span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)<span class="sc">$</span>coeff <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb26-41"><a href="#cb26-41" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> mse_lm, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">3</span>, <span class="at">lty =</span> <span class="st">"44"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="regularização_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">20</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>( <span class="fu">rep</span>(<span class="dv">1</span>,<span class="dv">3</span>), <span class="fu">rep</span>(<span class="dv">0</span>,<span class="dv">10</span>) )</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">rnorm</span>(n<span class="sc">*</span><span class="fu">length</span>(beta)) <span class="sc">|&gt;</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> n, <span class="at">ncol =</span> <span class="fu">length</span>(beta))</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n,<span class="dv">0</span>,<span class="dv">1</span>)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>mse_ridge <span class="ot">=</span> mse_lasso <span class="ot">=</span> <span class="fu">numeric</span>()</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (lambda <span class="cf">in</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">20</span>) {</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  beta_ridge <span class="ot">=</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_ridge,</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> lambda,</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>    mse_ridge[lambda <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">=</span> <span class="fu">mean</span>((beta_ridge <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>  beta_lasso <span class="ot">=</span></span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_lasso,</span>
+<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
+<span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
+<span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> lambda,</span>
+<span id="cb27-29"><a href="#cb27-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb27-30"><a href="#cb27-30" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
+<span id="cb27-31"><a href="#cb27-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-32"><a href="#cb27-32" aria-hidden="true" tabindex="-1"></a>    mse_lasso[lambda <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">=</span> <span class="fu">mean</span>((beta_lasso <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb27-33"><a href="#cb27-33" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb27-34"><a href="#cb27-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-35"><a href="#cb27-35" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mse_ridge,  <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">1</span>,</span>
+<span id="cb27-36"><a href="#cb27-36" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.1</span>),</span>
+<span id="cb27-37"><a href="#cb27-37" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"MSE"</span>, <span class="at">xlab =</span> <span class="st">"lambda"</span>)</span>
+<span id="cb27-38"><a href="#cb27-38" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(mse_lasso, <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">2</span>, <span class="at">lty =</span> <span class="st">"aa"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="regularização_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
 </section>
 <section id="elastic-net" class="level2" data-number="1.5">
 <h2 data-number="1.5" class="anchored" data-anchor-id="elastic-net"><span class="header-section-number">1.5</span> Elastic net</h2>
 <div style="text-align: right">
-<p>Can you?</p>
+<p>“Can you?”</p>
 </div>
-<p>O artigo <span class="citation" data-cites="en">Zou &amp; Hastie (<a href="referências.html#ref-en" role="doc-biblioref">2005</a>)</span> introduz o elastic net, que nada mais é que uma mistura das técnicas ridge e lasso.</p>
+<p>O artigo <span class="citation" data-cites="en">Zou &amp; Hastie (<a href="referências.html#ref-en" role="doc-biblioref">2005</a>)</span> introduz o elastic net, que nada mais é que uma mistura das técnicas ridge e lasso. A ideia inicial considera o seguinte estimador:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\hat\beta_{en}^{naïve}
+&amp;= \arg\min_{\beta} \left\{ SQRes + \lambda_{ridge}\sum_{j=1}^p \beta_j^2 + \lambda_{lasso}\sum_{j=1}^p |\beta_j| \right\}\\
+&amp;= \arg\min_{\beta} \left\{ SQRes + \lambda_{en} \left( \alpha \sum_{j=1}^p \beta_j^2 + (1 - \alpha)\sum_{j=1}^p |\beta_j| \right) \right\},
+\end{aligned}
+\]</span></p>
 </section>
 <section id="lidando-com-outliers" class="level2" data-number="1.6">
 <h2 data-number="1.6" class="anchored" data-anchor-id="lidando-com-outliers"><span class="header-section-number">1.6</span> Lidando com outliers</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>); x <span class="ot">=</span> <span class="fu">rnorm</span>(<span class="dv">20</span>); e <span class="ot">=</span> <span class="fu">rt</span>(<span class="dv">20</span>, <span class="dv">1</span>); y <span class="ot">=</span> <span class="dv">2</span><span class="sc">*</span>x <span class="sc">+</span> e; <span class="fu">plot</span>(y<span class="sc">~</span>x); <span class="fu">lm</span>(y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>x)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>); x <span class="ot">=</span> <span class="fu">rnorm</span>(<span class="dv">20</span>); e <span class="ot">=</span> <span class="fu">rt</span>(<span class="dv">20</span>, <span class="dv">1</span>); y <span class="ot">=</span> <span class="dv">2</span><span class="sc">*</span>x <span class="sc">+</span> e; <span class="fu">plot</span>(y<span class="sc">~</span>x); <span class="fu">lm</span>(y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>x)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="regularização_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="regularização_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -501,6 +760,9 @@ Coefficients:
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list" style="display: none">
+<div id="ref-en_glm2" class="csl-entry" role="listitem">
+Friedman, J. H., Hastie, T., &amp; Tibshirani, R. (2010). Regularization Paths for Generalized Linear Models via Coordinate Descent. <em>Journal of Statistical Software</em>, <em>33</em>(1), 1–22. Obtido de <a href="https://www.jstatsoft.org/index.php/jss/article/view/v033i01">https://www.jstatsoft.org/index.php/jss/article/view/v033i01</a>
+</div>
 <div id="ref-glmnet" class="csl-entry" role="listitem">
 Friedman, J., Hastie, T., Tibshirani, R., et al. (2025). <em>glmnet: Lasso and Elastic-Net Regularized Generalized Linear Models</em>. Stanford University. Obtido de <a href="https://glmnet.stanford.edu/">https://glmnet.stanford.edu/</a>
 </div>
@@ -515,6 +777,9 @@ Kuhn, M., &amp; Silge, J. (2022). <em>Tidy Modeling with R</em>. O’Reilly Medi
 </div>
 <div id="ref-R" class="csl-entry" role="listitem">
 R Core Team. (2024). <em>R: A Language and Environment for Statistical Computing</em>. Vienna, Austria: R Foundation for Statistical Computing. Obtido de <a href="https://www.r-project.org/">https://www.r-project.org/</a>
+</div>
+<div id="ref-en_glm" class="csl-entry" role="listitem">
+Tay, J. K., Narasimhan, B., &amp; Hastie, T. (2023). Elastic Net Regularization Paths for All Generalized Linear Models. <em>Journal of Statistical Software</em>, <em>106</em>(1), 1–31. Obtido de <a href="https://www.jstatsoft.org/article/view/v106i01">https://www.jstatsoft.org/article/view/v106i01</a>
 </div>
 <div id="ref-lasso" class="csl-entry" role="listitem">
 Tibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. <em>Journal of the Royal Statistical Society. Series B (Methodological)</em>, <em>58</em>(1), 267–288. Obtido de <a href="https://www.jstor.org/stable/2346178">https://www.jstor.org/stable/2346178</a>
