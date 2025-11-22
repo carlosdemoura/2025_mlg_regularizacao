@@ -245,6 +245,7 @@ window.Quarto = {
   <li><a href="#estudo-com-dados-simulados" id="toc-estudo-com-dados-simulados" class="nav-link" data-scroll-target="#estudo-com-dados-simulados"><span class="header-section-number">2.4</span> Estudo com dados simulados</a>
   <ul class="collapse">
   <li><a href="#bootstrap" id="toc-bootstrap" class="nav-link" data-scroll-target="#bootstrap"><span class="header-section-number">2.4.1</span> Bootstrap</a></li>
+  <li><a href="#lidando-com-outliers" id="toc-lidando-com-outliers" class="nav-link" data-scroll-target="#lidando-com-outliers"><span class="header-section-number">2.4.2</span> Lidando com outliers</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -276,7 +277,26 @@ window.Quarto = {
 </div>
 <section id="regularização-como-uma-função-de-perda" class="level2" data-number="2.1">
 <h2 data-number="2.1" class="anchored" data-anchor-id="regularização-como-uma-função-de-perda"><span class="header-section-number">2.1</span> Regularização como uma função de perda</h2>
-<p>Até agora vimos exemplos de como a regularização pode ser vista como uma função de perda na estimação de mínimos quadrados. Essa ideia pode ser estendida para a estimação via máxima verossimilhança (como veremos adiante). Antes disso, mostraremos um exemplo de como a regressão ridge e lasso diminuem os coeficiente na prática.</p>
+<p>Até agora vimos exemplos de como a regularização pode ser vista como uma função de perda na estimação de mínimos quadrados. Essa ideia pode ser estendida para a estimação via máxima verossimilhança (como veremos adiante). Antes disso, mostraremos um exemplo (retirado de <span class="citation" data-cites="islr">James, Witten, Hastie, &amp; Tibshirani (<a href="referências.html#ref-islr" role="doc-biblioref">2021</a>)</span>) de como a regressão ridge e lasso diminuem os coeficiente na prática.</p>
+<p>Considere o caso em que <span class="math inline">\(n = p\)</span>, <span class="math inline">\(X = I_n\)</span>, e não temos intercepto. Assim <span class="math inline">\(\hat\beta_{OLS} = Y\)</span>. Nesse caso, é possível mostrar que</p>
+<p><span class="math display">\[
+\hat\beta_j^{ridge} = \frac{Y_j}{1 + \lambda}
+\]</span> e</p>
+<p><span class="math display">\[
+\hat\beta_j^{lasso} =
+\begin{cases}
+Y_j - \lambda/2, &amp; \text{se } Y_j &gt; \lambda/2;\\
+Y_j + \lambda/2, &amp; \text{se } Y_j &lt; - \lambda/2;\\
+0, &amp; \text{se } -\lambda/2 \leq Y_j \leq \lambda/2.
+\end{cases}
+\]</span></p>
+<p>Com esse exemplo simples, podemos entender porque a regressão ridge nunca iguala os coeficientes a zero, coisa que a lasso pode fazer. Essa característica de zerar coeficientes a depender do valor que os dados assumem é conhecido como <em>soft-tresholding</em> (limiar suave). De acordo com <span class="citation" data-cites="en">Zou &amp; Hastie (<a href="referências.html#ref-en" role="doc-biblioref">2005</a>)</span>, a elastic net mistura tanto a shinkage da regressão ridge quanto o soft tresholding da lasso.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="https://www.statlearning.com/"><img src="../img/islr_soft-tresholding.png" class="img-fluid figure-img" style="width:90.0%"></a></p>
+<figcaption>Gráfico das condições acima.</figcaption>
+</figure>
+</div>
 </section>
 <section id="regularização-como-uma-restrição-do-espaço-paramétrico" class="level2" data-number="2.2">
 <h2 data-number="2.2" class="anchored" data-anchor-id="regularização-como-uma-restrição-do-espaço-paramétrico"><span class="header-section-number">2.2</span> Regularização como uma restrição do espaço paramétrico</h2>
@@ -489,28 +509,29 @@ Dica
 <p>Sabemos que no caso da Poisson, a função de ligação canônica é o log e a função de variância é <span class="math inline">\(\mu_i\)</span>. Assim, nosso algoritmo IRLS-EN fica da seguinte forma.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>sqres_en <span class="ot">=</span> <span class="cf">function</span>(beta, w, z) {</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(  w <span class="sc">*</span> (z <span class="sc">-</span> X <span class="sc">%*%</span> beta)<span class="sc">^</span><span class="dv">2</span>  ) <span class="sc">/</span> (<span class="dv">2</span> <span class="sc">*</span> <span class="fu">nrow</span>(X)) <span class="sc">+</span>  lambda <span class="sc">*</span> (  alpha <span class="sc">*</span> <span class="fu">sum</span>(<span class="fu">abs</span>(beta[<span class="sc">-</span><span class="dv">1</span>])) <span class="sc">+</span> ((<span class="dv">1</span> <span class="sc">-</span> alpha)<span class="sc">/</span><span class="dv">2</span>) <span class="sc">*</span> <span class="fu">crossprod</span>(beta[<span class="sc">-</span><span class="dv">1</span>])  )</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>iter <span class="ot">=</span> <span class="dv">20</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>alpha <span class="ot">=</span> .<span class="dv">5</span>; lambda <span class="ot">=</span> <span class="dv">2</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>beta_hat <span class="ot">=</span> <span class="fu">matrix</span>(<span class="dv">1</span>, <span class="at">nrow =</span> iter, <span class="at">ncol =</span> <span class="dv">4</span>)</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (t <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>iter) {</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  eta <span class="ot">=</span> X <span class="sc">%*%</span> beta_hat[t<span class="dv">-1</span>,]</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  mu <span class="ot">=</span> <span class="fu">exp</span>(eta)</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  z <span class="ot">=</span> eta <span class="sc">+</span> (Y <span class="sc">-</span> mu)<span class="sc">/</span>mu</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  beta_hat[t,] <span class="ot">=</span> </span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_en,</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">w      =</span> mu,</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">z      =</span> z,</span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>beta_hat[iter,]</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(  w <span class="sc">*</span> (z <span class="sc">-</span> X <span class="sc">%*%</span> beta)<span class="sc">^</span><span class="dv">2</span>  ) <span class="sc">/</span> (<span class="dv">2</span> <span class="sc">*</span> <span class="fu">nrow</span>(X)) <span class="sc">+</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    lambda <span class="sc">*</span> (  alpha <span class="sc">*</span> <span class="fu">sum</span>(<span class="fu">abs</span>(beta[<span class="sc">-</span><span class="dv">1</span>])) <span class="sc">+</span> ((<span class="dv">1</span> <span class="sc">-</span> alpha)<span class="sc">/</span><span class="dv">2</span>) <span class="sc">*</span> <span class="fu">crossprod</span>(beta[<span class="sc">-</span><span class="dv">1</span>])  )</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>iter <span class="ot">=</span> <span class="dv">20</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>alpha <span class="ot">=</span> .<span class="dv">5</span>; lambda <span class="ot">=</span> <span class="dv">2</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>beta_hat <span class="ot">=</span> <span class="fu">matrix</span>(<span class="dv">1</span>, <span class="at">nrow =</span> iter, <span class="at">ncol =</span> <span class="dv">4</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (t <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>iter) {</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  eta <span class="ot">=</span> X <span class="sc">%*%</span> beta_hat[t<span class="dv">-1</span>,]</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  mu <span class="ot">=</span> <span class="fu">exp</span>(eta)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  z <span class="ot">=</span> eta <span class="sc">+</span> (Y <span class="sc">-</span> mu)<span class="sc">/</span>mu</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  beta_hat[t,] <span class="ot">=</span> </span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_en,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">w      =</span> mu,</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">z      =</span> z,</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>beta_hat[iter,]</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1.3955786928 1.3117519002 0.2194140504 0.0004518438</code></pre>
 </div>
@@ -518,6 +539,28 @@ Dica
 <section id="bootstrap" class="level3" data-number="2.4.1">
 <h3 data-number="2.4.1" class="anchored" data-anchor-id="bootstrap"><span class="header-section-number">2.4.1</span> Bootstrap</h3>
 <p>A</p>
+</section>
+<section id="lidando-com-outliers" class="level3" data-number="2.4.2">
+<h3 data-number="2.4.2" class="anchored" data-anchor-id="lidando-com-outliers"><span class="header-section-number">2.4.2</span> Lidando com outliers</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>); x <span class="ot">=</span> <span class="fu">rnorm</span>(<span class="dv">20</span>); e <span class="ot">=</span> <span class="fu">rt</span>(<span class="dv">20</span>, <span class="dv">1</span>); y <span class="ot">=</span> <span class="dv">2</span><span class="sc">*</span>x <span class="sc">+</span> e; <span class="fu">plot</span>(y<span class="sc">~</span>x); <span class="fu">lm</span>(y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>x)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="estimação_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = y ~ 0 + x)
+
+Coefficients:
+    x  
+6.136  </code></pre>
+</div>
+</div>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list" style="display: none">
