@@ -1,5 +1,9 @@
 # Exemplo prático
 
+::: {style="text-align: right"}
+"Minha jangada vai sair por mar"
+:::
+
 Esparsidade, multicolinearidade e outliers
 
 ```{r}

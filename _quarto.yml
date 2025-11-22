@@ -27,8 +27,7 @@ format:
       - cosmo
       - brand
     code-fold: false
-  pdf:
-    documentclass: scrreprt
+    css: styles.css
     
 execute:
   freeze: auto

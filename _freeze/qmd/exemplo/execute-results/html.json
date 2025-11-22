@@ -1,8 +1,8 @@
 {
-  "hash": "70e7d8f332277f1a9bed879bcf5ed268",
+  "hash": "b3d2f7b17c6a16bdd25d60940b78c388",
   "result": {
     "engine": "knitr",
-    "markdown": "# Exemplo prático\n\nEsparsidade, multicolinearidade e outliers\n\n\n::: {.cell}\n\n```{.r .cell-code}\n1\n```\n\n::: {.cell-output .cell-output-stdout}\n\n```\n[1] 1\n```\n\n\n:::\n:::\n\n",
+    "markdown": "# Exemplo prático\n\n::: {style=\"text-align: right\"}\n\"Minha jangada vai sair por mar\"\n:::\n\nEsparsidade, multicolinearidade e outliers\n\n\n::: {.cell}\n\n```{.r .cell-code}\n1\n```\n\n::: {.cell-output .cell-output-stdout}\n\n```\n[1] 1\n```\n\n\n:::\n:::\n\n",
     "supporting": [],
     "filters": [
       "rmarkdown/pagebreak.lua"

@@ -8,8 +8,195 @@ Um jornal de ontem"<br>
 Tom Zé
 :::
 
-FS vs shrinkage
+## Regularização como uma função de perda
+
+Até agora vimos exemplos de como a regularização pode ser vista como uma função de perda na estimação de mínimos quadrados. Essa ideia pode ser estendida para a estimação via máxima verossimilhança (como veremos adiante).
+Antes disso, mostraremos um exemplo de como a regressão ridge e lasso diminuem os coeficiente na prática.
+
+
+## Regularização como uma restrição do espaço paramétrico
+
+É possível entender cada um dos processos de regularização descritos anteriormente como uma restrição do espaço paramétrico dos coeficientes de regressão. Se não fazer seleção é considerer que $\beta \in \mathbb R^d$, é possível mostrar que - escolhidos os parâmetros de shrinkage - então minimar a soma de quadrados do resíduo penalizada é a mesma coisa que minimizar a soma de quadrado da regressão num espaço paramétrico menor (que depende dos parâmetros de shrinkage escolhidos).
+
+Assim, (na regressão linear normal) vale que:
+
+
+$$
+\hat\beta_{ridge} = 
+\arg\min_{\beta} \{SQRes\}
+\quad \text{com } \beta \text{ tal que} \quad
+\sum_{j=1}^p \beta_j^2 \le t_{ridge},
+$$
+
+$$
+\hat\beta_{lasso} = 
+\arg\min_{\beta} \{SQRes\}
+\quad \text{com } \beta \text{ tal que} \quad
+\sum_{j=1}^p |\beta_j| \le t_{lasso},
+$$
+
+$$
+\hat\beta_{elastic\ net} = 
+\arg\min_{\beta} \{SQRes\}
+\quad \text{com } \beta \text{ tal que} \quad
+(1-\alpha)\sum_{j=1}^p |\beta_j| + \alpha \sum_{j=1}^p \beta_j^2 \le t_{elastic\ net}.
+$$
 
 ```{r}
-1+ 1
+#| code-fold:  TRUE
+#| fig-width:  10
+#| fig-height: 4
+desenhar_espaço_paramétrico = function(alpha, t, título = NULL) {
+  stopifnot(
+    "alpha deve estar entre 0 e 1" = all(alpha >= 0, alpha <= 1),
+    "t deve ser positivo"          = t > 0
+  )
+  
+  F = function(x, y) alpha*(x^2 + y^2 - t) + (1-alpha)*(abs(x) + abs(y) - t)
+  
+  x = seq(-2, 2, length = 400)
+  y = seq(-2, 2, length = 400)
+  g = outer(x, y, F)
+  
+  contour(x, y, g,
+          levels = 0,
+          drawlabels = FALSE,
+          lwd = 2, asp = 1,
+          main = título,
+          cex.main = 2
+          )
+}
+
+
+par(mfrow = c(1,3))
+desenhar_espaço_paramétrico(1,   1, "ridge")
+desenhar_espaço_paramétrico(0,   1, "lasso")
+desenhar_espaço_paramétrico(1/2, 1, "elastic net")
 ```
+
+
+## Regularização nos MLGs
+
+O modelo linear normal pode ser especificado diretamente por meio de seus resíduos, mas - em geral - isso não é possível em todos os MLGs. Aqui, apresentaremos a técnica descrita em @en_glm, que generaliza a regularização elastic net para os MLGs.
+Grosso modo, em vez de minimizar a SQRes penalizada (que nem sempre está bem definida), vamos minimizar o inverso aditivo da log-verossimilhança penalizada (que sempre está bem definida num MLG).
+
+$$
+\hat{\beta}
+= \arg\min_{\beta}
+\left\{
+  -\frac{1}{n}\sum_{i=1}^n \text{loglik}\left(y_i, X \beta \right) + P_{\alpha, \lambda}(\beta)
+\right\},
+$$
+
+onde $P_{\alpha, \lambda}(\beta)$ é a função de penalização elastic net, ou seja
+$$
+P_{\alpha, \lambda}(\beta) = 
+\lambda \left( \frac{1 - \alpha}{2}  \sum_{j=1}^p \beta_j^2 + \alpha\sum_{j=1}^p |\beta_j| \right).
+$$
+
+Com isso, temos um algoritmo de mínimos quadrados ponderados (IRLS) dado a seguir.
+
+::: {.callout-tip}
+## IRLS elastic net
+
+Selecione um valor de $\alpha \in [0,1]$ e valor de $\lambda \in \mathbb R$.
+
+Inicialize o algritmo de maneira razoável - com $\hat\beta^{(0)} = 0$, ou $\eta^{(0)} = Y$, ou qualquer coisa que faça sentido. Doravante para $t = 1, 2, \dots$ (até que se atinja convergência) faça:
+
+1. Compute $\eta_i^{(t)} = X\hat{\beta}^{(t)}$ e também $\ \mu_i^{(t)} = g^{-1}(\eta_i^{(t)})$, para $i \in 1:n$;
+
+2. Compute $z_i^{(t)} = \eta_i^{(t)} + (y_i - \mu_i^{(t)}) \left( \frac{d\mu_i^{(t)}}{d\eta_i^{(t)}} \right)^{-1}$
+e também
+$w_i^{(t)} = \frac{1}{V(\mu_i^{(t)})} \left( \frac{d\mu_i^{(t)}}{d\eta_i^{(t)}} \right)^2$,
+para $i \in 1:n$;
+
+3. Resolva
+
+$$
+\hat{\beta}^{(t+1)}
+=
+\arg\min_{\beta}
+\left\{
+\frac{1}{2n}
+\sum_{i=1}^n w_i^{(t)}
+\bigl( z_i^{(t)} - X_i \beta \bigr)^2
++ P_{\alpha, \lambda}(\beta)
+\right\}.
+$$
+:::
+
+## Estudo com dados simulados
+
+```{r}
+#| message: false
+#| warning: false
+
+set.seed(12345)
+n = 100
+beta = c(1, 2, 0, 0)
+X = matrix(1, nrow = n, ncol = 4)
+X[,2] = rnorm(n)
+X[,3] = 2 * X[,2] + rnorm(n)
+X[,4] = rnorm(n)
+mu = exp(X %*% beta)
+Y = rpois(n, mu)
+
+df = 
+  cbind(Y,X[,2:4]) |>
+  tibble::as_tibble() |>
+  `colnames<-`(c("ataques", "temperatura", "sorvete", "bobagem"))
+```
+
+```{r}
+mod = glm(ataques~temperatura+sorvete+bobagem, family=poisson(link = "log"), data = df)
+summary(mod)
+```
+::: {.callout-note collapse="true"}
+Apenas para ver o efeito que um tamanho de amostra menor teria.
+
+```{r}
+glm(ataques~temperatura+sorvete+bobagem, family=poisson(link = "log"), data = df[1:20,]) |>
+  summary()
+```
+:::
+
+::: {.callout-tip}
+Em modelos com função de ligação canônica, o algoritmo acima simplica. O segundo passo da iteração fica:
+Compute $z_i^{(t)} = \eta_i^{(t)} + \frac{(y_i - \mu_i^{(t)})}{V(\mu_i^{})}$
+e também
+$w_i^{(t)} = V(\mu_i^{(t)})$,
+para $i \in 1:n$;
+:::
+
+Sabemos que no caso da Poisson, a função de ligação canônica é o log e a função de variância é $\mu_i$. Assim, nosso algoritmo IRLS-EN fica da seguinte forma.
+
+```{r}
+sqres_en = function(beta, w, z) {
+  sum(  w * (z - X %*% beta)^2  ) / (2 * nrow(X)) +  lambda * (  alpha * sum(abs(beta[-1])) + ((1 - alpha)/2) * crossprod(beta[-1])  )
+}
+
+iter = 20
+alpha = .5; lambda = 2
+beta_hat = matrix(1, nrow = iter, ncol = 4)
+
+for (t in 2:iter) {
+  eta = X %*% beta_hat[t-1,]
+  mu = exp(eta)
+  z = eta + (Y - mu)/mu
+  beta_hat[t,] = 
+    optim(
+      par    = rep(0,ncol(X)),
+      fn     = sqres_en,
+      w      = mu,
+      z      = z,
+      method = "BFGS"
+    )$par
+}
+
+beta_hat[iter,]
+```
+
+
+### Bootstrap
+
+A

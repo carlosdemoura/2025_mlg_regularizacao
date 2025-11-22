@@ -126,7 +126,37 @@ div.csl-indent {
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
 </head>
 
 <body class="nav-sidebar floating quarto-light">
@@ -196,7 +226,7 @@ div.csl-indent {
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../qmd/referências.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">References</span></a>
+ <span class="menu-text">Referências</span></a>
   </div>
 </li>
     </ul>
@@ -204,8 +234,20 @@ div.csl-indent {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Índice</h2>
+   
+  <ul>
+  <li><a href="#regularização-como-uma-função-de-perda" id="toc-regularização-como-uma-função-de-perda" class="nav-link active" data-scroll-target="#regularização-como-uma-função-de-perda"><span class="header-section-number">2.1</span> Regularização como uma função de perda</a></li>
+  <li><a href="#regularização-como-uma-restrição-do-espaço-paramétrico" id="toc-regularização-como-uma-restrição-do-espaço-paramétrico" class="nav-link" data-scroll-target="#regularização-como-uma-restrição-do-espaço-paramétrico"><span class="header-section-number">2.2</span> Regularização como uma restrição do espaço paramétrico</a></li>
+  <li><a href="#regularização-nos-mlgs" id="toc-regularização-nos-mlgs" class="nav-link" data-scroll-target="#regularização-nos-mlgs"><span class="header-section-number">2.3</span> Regularização nos MLGs</a></li>
+  <li><a href="#estudo-com-dados-simulados" id="toc-estudo-com-dados-simulados" class="nav-link" data-scroll-target="#estudo-com-dados-simulados"><span class="header-section-number">2.4</span> Estudo com dados simulados</a>
+  <ul class="collapse">
+  <li><a href="#bootstrap" id="toc-bootstrap" class="nav-link" data-scroll-target="#bootstrap"><span class="header-section-number">2.4.1</span> Bootstrap</a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -232,16 +274,128 @@ div.csl-indent {
 <div style="text-align: right">
 <p>“Se isto for possível,<br> Pois, me contem,<br> Como escrever de novo,<br> Um jornal de ontem”<br> Tom Zé</p>
 </div>
-<p>FS vs shrinkage</p>
+<section id="regularização-como-uma-função-de-perda" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="regularização-como-uma-função-de-perda"><span class="header-section-number">2.1</span> Regularização como uma função de perda</h2>
+<p>Até agora vimos exemplos de como a regularização pode ser vista como uma função de perda na estimação de mínimos quadrados. Essa ideia pode ser estendida para a estimação via máxima verossimilhança (como veremos adiante). Antes disso, mostraremos um exemplo de como a regressão ridge e lasso diminuem os coeficiente na prática.</p>
+</section>
+<section id="regularização-como-uma-restrição-do-espaço-paramétrico" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="regularização-como-uma-restrição-do-espaço-paramétrico"><span class="header-section-number">2.2</span> Regularização como uma restrição do espaço paramétrico</h2>
+<p>É possível entender cada um dos processos de regularização descritos anteriormente como uma restrição do espaço paramétrico dos coeficientes de regressão. Se não fazer seleção é considerer que <span class="math inline">\(\beta \in \mathbb R^d\)</span>, é possível mostrar que - escolhidos os parâmetros de shrinkage - então minimar a soma de quadrados do resíduo penalizada é a mesma coisa que minimizar a soma de quadrado da regressão num espaço paramétrico menor (que depende dos parâmetros de shrinkage escolhidos).</p>
+<p>Assim, (na regressão linear normal) vale que:</p>
+<p><span class="math display">\[
+\hat\beta_{ridge} =
+\arg\min_{\beta} \{SQRes\}
+\quad \text{com } \beta \text{ tal que} \quad
+\sum_{j=1}^p \beta_j^2 \le t_{ridge},
+\]</span></p>
+<p><span class="math display">\[
+\hat\beta_{lasso} =
+\arg\min_{\beta} \{SQRes\}
+\quad \text{com } \beta \text{ tal que} \quad
+\sum_{j=1}^p |\beta_j| \le t_{lasso},
+\]</span></p>
+<p><span class="math display">\[
+\hat\beta_{elastic\ net} =
+\arg\min_{\beta} \{SQRes\}
+\quad \text{com } \beta \text{ tal que} \quad
+(1-\alpha)\sum_{j=1}^p |\beta_j| + \alpha \sum_{j=1}^p \beta_j^2 \le t_{elastic\ net}.
+\]</span></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span><span class="sc">+</span> <span class="dv">1</span></span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<details class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>desenhar_espaço_paramétrico <span class="ot">=</span> <span class="cf">function</span>(alpha, t, título <span class="ot">=</span> <span class="cn">NULL</span>) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"alpha deve estar entre 0 e 1"</span> <span class="ot">=</span> <span class="fu">all</span>(alpha <span class="sc">&gt;=</span> <span class="dv">0</span>, alpha <span class="sc">&lt;=</span> <span class="dv">1</span>),</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"t deve ser positivo"</span>          <span class="ot">=</span> t <span class="sc">&gt;</span> <span class="dv">0</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  F <span class="ot">=</span> <span class="cf">function</span>(x, y) alpha<span class="sc">*</span>(x<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> y<span class="sc">^</span><span class="dv">2</span> <span class="sc">-</span> t) <span class="sc">+</span> (<span class="dv">1</span><span class="sc">-</span>alpha)<span class="sc">*</span>(<span class="fu">abs</span>(x) <span class="sc">+</span> <span class="fu">abs</span>(y) <span class="sc">-</span> t)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">=</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">2</span>, <span class="dv">2</span>, <span class="at">length =</span> <span class="dv">400</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">=</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">2</span>, <span class="dv">2</span>, <span class="at">length =</span> <span class="dv">400</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  g <span class="ot">=</span> <span class="fu">outer</span>(x, y, F)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">contour</span>(x, y, g,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>          <span class="at">levels =</span> <span class="dv">0</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">drawlabels =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>          <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">asp =</span> <span class="dv">1</span>,</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>          <span class="at">main =</span> título,</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>          <span class="at">cex.main =</span> <span class="dv">2</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>          )</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">3</span>))</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>desenhar_espaço_paramétrico(<span class="dv">1</span>,   <span class="dv">1</span>, <span class="st">"ridge"</span>)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>desenhar_espaço_paramétrico(<span class="dv">0</span>,   <span class="dv">1</span>, <span class="st">"lasso"</span>)</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>desenhar_espaço_paramétrico(<span class="dv">1</span><span class="sc">/</span><span class="dv">2</span>, <span class="dv">1</span>, <span class="st">"elastic net"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="estimação_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
 </div>
 </div>
+</div>
+</section>
+<section id="regularização-nos-mlgs" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="regularização-nos-mlgs"><span class="header-section-number">2.3</span> Regularização nos MLGs</h2>
+<p>O modelo linear normal pode ser especificado diretamente por meio de seus resíduos, mas - em geral - isso não é possível em todos os MLGs. Aqui, apresentaremos a técnica descrita em <span class="citation" data-cites="en_glm">Tay, Narasimhan, &amp; Hastie (<a href="referências.html#ref-en_glm" role="doc-biblioref">2023</a>)</span>, que generaliza a regularização elastic net para os MLGs. Grosso modo, em vez de minimizar a SQRes penalizada (que nem sempre está bem definida), vamos minimizar o inverso aditivo da log-verossimilhança penalizada (que sempre está bem definida num MLG).</p>
+<p><span class="math display">\[
+(\hat{\beta}_0, \hat{\beta})
+= \arg\min_{\beta_0,\beta}
+\left\{
+  -\frac{1}{n}\sum_{i=1}^n \text{loglik}\left(y_i, X \beta \right) + P_{\alpha, \lambda}(\beta)
+\right\},
+\]</span></p>
+<p>onde <span class="math inline">\(P_{\alpha, \lambda}(\beta)\)</span> é a função de penalização elastic net, ou seja <span class="math display">\[
+P_{\alpha, \lambda}(\beta) =
+\lambda \left( \frac{1 - \alpha}{2}  \sum_{j=1}^p \beta_j^2 + \alpha\sum_{j=1}^p |\beta_j| \right).
+\]</span></p>
+<p>Com isso, temos um algoritmo de mínimos quadrados ponderados (IRLS) dado a seguir.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>IRLS elastic net
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Selecione um valor de <span class="math inline">\(\alpha \in [0,1]\)</span> e valor de <span class="math inline">\(\lambda \in \mathbb R\)</span>.</p>
+<p>Inicialize o algritmo de maneira razoável - com <span class="math inline">\(\hat\beta^{(0)} = 0\)</span>, ou <span class="math inline">\(\eta^{(0)} = Y\)</span>, ou qualquer coisa que faça sentido. Doravante para <span class="math inline">\(t = 1, 2, \dots\)</span> (até que se atinja convergência) faça:</p>
+<ol type="1">
+<li><p>Compute <span class="math inline">\(\eta_i^{(t)} = X\hat{\beta}^{(t)}\)</span> e também <span class="math inline">\(\ \mu_i^{(t)} = g^{-1}(\eta_i^{(t)})\)</span>, para <span class="math inline">\(i \in 1:n\)</span>;</p></li>
+<li><p>Compute <span class="math inline">\(z_i^{(t)} = \eta_i^{(t)} + (y_i - \mu_i^{(t)}) \left( \frac{d\mu_i^{(t)}}{d\eta_i^{(t)}} \right)\)</span> e também <span class="math inline">\(w_i^{(t)} = \frac{1}{V(\mu_i^{(t)})} \left( \frac{d\mu_i^{(t)}}{d\eta_i^{(t)}} \right)^2\)</span>, para <span class="math inline">\(i \in 1:n\)</span>;</p></li>
+<li><p>Resolva</p></li>
+</ol>
+<p><span class="math display">\[
+\hat{\beta}^{(t+1)}
+=
+\arg\min_{\beta}
+\left\{
+\frac{1}{2n}
+\sum_{i=1}^n w_i^{(t)}
+\bigl( z_i^{(t)} - X \beta \bigr)^2
++ P_{\alpha, \lambda}(\beta)
+\right\}
+\]</span></p>
+</div>
+</div>
+</section>
+<section id="estudo-com-dados-simulados" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="estudo-com-dados-simulados"><span class="header-section-number">2.4</span> Estudo com dados simulados</h2>
+<section id="bootstrap" class="level3" data-number="2.4.1">
+<h3 data-number="2.4.1" class="anchored" data-anchor-id="bootstrap"><span class="header-section-number">2.4.1</span> Bootstrap</h3>
+<p>A</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list" style="display: none">
+<div id="ref-en_glm2" class="csl-entry" role="listitem">
+Friedman, J. H., Hastie, T., &amp; Tibshirani, R. (2010). Regularization Paths for Generalized Linear Models via Coordinate Descent. <em>Journal of Statistical Software</em>, <em>33</em>(1), 1–22. Obtido de <a href="https://www.jstatsoft.org/index.php/jss/article/view/v033i01">https://www.jstatsoft.org/index.php/jss/article/view/v033i01</a>
+</div>
 <div id="ref-glmnet" class="csl-entry" role="listitem">
 Friedman, J., Hastie, T., Tibshirani, R., et al. (2025). <em>glmnet: Lasso and Elastic-Net Regularized Generalized Linear Models</em>. Stanford University. Obtido de <a href="https://glmnet.stanford.edu/">https://glmnet.stanford.edu/</a>
 </div>
@@ -257,6 +411,9 @@ Kuhn, M., &amp; Silge, J. (2022). <em>Tidy Modeling with R</em>. O’Reilly Medi
 <div id="ref-R" class="csl-entry" role="listitem">
 R Core Team. (2024). <em>R: A Language and Environment for Statistical Computing</em>. Vienna, Austria: R Foundation for Statistical Computing. Obtido de <a href="https://www.r-project.org/">https://www.r-project.org/</a>
 </div>
+<div id="ref-en_glm" class="csl-entry" role="listitem">
+Tay, J. K., Narasimhan, B., &amp; Hastie, T. (2023). Elastic Net Regularization Paths for All Generalized Linear Models. <em>Journal of Statistical Software</em>, <em>106</em>(1), 1–31. Obtido de <a href="https://www.jstatsoft.org/article/view/v106i01">https://www.jstatsoft.org/article/view/v106i01</a>
+</div>
 <div id="ref-lasso" class="csl-entry" role="listitem">
 Tibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. <em>Journal of the Royal Statistical Society. Series B (Methodological)</em>, <em>58</em>(1), 267–288. Obtido de <a href="https://www.jstor.org/stable/2346178">https://www.jstor.org/stable/2346178</a>
 </div>
@@ -264,6 +421,8 @@ Tibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. <em>Jou
 Zou, H., &amp; Hastie, T. (2005). Regularization and Variable Selection via the Elastic Net. <em>Journal of the Royal Statistical Society. Series B (Statistical Methodology)</em>, <em>67</em>(2), 301–320. Obtido de <a href="https://www.jstor.org/stable/3647580">https://www.jstor.org/stable/3647580</a>
 </div>
 </div>
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

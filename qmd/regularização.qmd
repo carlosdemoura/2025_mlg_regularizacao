@@ -4,6 +4,33 @@
 
 Stepwise
 
+```{r}
+#| code-fold: TRUE
+#| out-width: "70%"
+#| fig-align: center
+
+f = function(n) {
+  s = 0
+  for (i in 1:n) {
+    s = s + choose(n, i)
+  }
+  s
+}
+
+seq(1, 20, 1) |>
+  lapply(f) |>
+  unlist() |>
+  plot(type = 'l',
+       main = "",
+       xlab = "número de covariáveis numéricas",
+       ylab = "número de possíveis modelos"
+       )
+```
+
+
+
+
+
 ## Ridge
 
 A técnica Ridge foi a primeira das três técnicas a surgir, no trabalho de @ridge. Originalmente, os autores buscavam entender como superar problemas em que a matriz de covariáveis $X$ estava mal-especificada.
@@ -51,13 +78,17 @@ Y = X %*% beta + rnorm(n)
 
 <details>
 <summary><strong>Ver matriz X</strong></summary>
+<div class="details-content">
 ```{r}
 head(X)
 matrixcalc::is.singular.matrix(t(X)%*%X)
 ```
+</div>
 </details>
 
 ```{r}
+#| code-fold:  TRUE
+#| fig-align: center
 #| fig-width:  10
 #| fig-height: 4
 par(mfrow=c(1,2))
@@ -70,6 +101,8 @@ lm(Y~0+X)
 ```
 <details>
 <summary><strong>E se a regressão estivesse na outra covariável?</strong></summary>
+<div class="details-content">
+
 ```{r}
 set.seed(12345)
 
@@ -82,6 +115,7 @@ lm(Y~0+X)
 
 Detalhes
 
+</div>
 </details>
 
 Comentários sobre o modelo não saber selecionar variáveis.
@@ -98,12 +132,13 @@ Y = X %*% beta + rnorm(n)
 
 <details>
 <summary><strong>Ver matriz X</strong></summary>
+<div class="details-content">
 ```{r}
 head(X)
 matrixcalc::is.singular.matrix(t(X)%*%X)
 eigen(t(X)%*%X)$values
 ```
-
+</div>
 </details>
 
 ```{r}
@@ -112,8 +147,42 @@ lm(Y~0+X)
 
 Comentários sobre combinações lineares, parcimônia e inflação da variância na inferência.
 
-A proposta de @ridge
+A proposta de @ridge é adicionar um certo múltiplo da matriz identidade à $X^\top X$, de modo que seja possível superar os problemas de uma matriz $X$ mal especificada. @islr mostra que isso é equivalente a adicionar uma punição no processo de estimação por mínimos quadrados. Seja $SQRes = (Y - X\beta)^\top(Y - X\beta)= \sum_{i=1}^n \left( y_i - \beta_0 - \sum_{j=1}^p \beta_j x_{ij} \right)^2$, assim:
 
+$$
+\hat\beta_{ridge} =
+\arg\min_{\beta} \left\{ SQRes + \lambda_{ridge}\sum_{j=1}^p \beta_j^2 \right\},
+$$
+
+em que $\lambda_{ridge}$ é uma constante positiva (escolhida pelo pesquisador) que dá o peso dessa punição.
+
+Note que:
+
+* À medida que $\lambda$ cresce menores ficam as estimativas dos betas, $\hat\beta_{ridge} \rightarrow 0,\ \lambda_{ridge} \rightarrow \infty$.
+* Não faz sentido incluir o intercepto no processo de shrinkage, pois $g(\beta_0)$ é o valor esperado da variável resposta dado que as demais covariáveis são zero, em que $g$ é uma função de ligação.
+* Fica claro que a depender do valor de $\lambda$ que escolhemos, estamos incluindo algum viés no modelo.
+* A estimação ridge diminui as estimativas dos betas na mesma proporção (se comparada com o MMQ tradicional).
+* Em diminuindo a estimativa dos betas, diminui-se também a variância envolvida nas estimativas dos parâmetros.
+
+::: {.callout-warning}
+Ao usar métodos de regularização, estamos fazendo um trade-off entre variância e viés. Grosso modo, estamos inserido algum viés em nossas estimativas, a fim de diminuir a variância na estimação dos parâmetros e assim fazer inferências mais precisas.
+
+Um bom método de escolha do parâmetro de shrinkage é crucial para o bom funcionamento da estimação ridge.
+Falaremos disso nas próximas seções.
+_Spoiler: faremos validação cruzada._
+:::
+
+[![Analogia dos dardos para pensar variância e viés.](../img/bias_variance_dartboard.png){width=60%}](https://neuroimaging-data-science.org/content/007-ml/005-model-selection.html)
+
+O exemplo abaixo está no livro @islr, `Credit` é um conjunto de dados incluído no pacote ISLR, contendo informações sobre 4000 clientes de um banco, com o objetivo de modelar e entender fatores associados ao limite de crédito de cada pessoa.
+
+[![Exemplo de regressão ridge.](../img/islr_ridge.png){width=90%}](https://www.statlearning.com/)
+
+::: {.callout-tip}
+## Padronização das covariáveis
+
+A técnica ridge pode ser muito sensível à escala das covariáveis. Nesse sentido, vale a pena padronizar as covariáveis pelo desvio-padrão para evitar a influência desse efeito.
+:::
 
 
 
@@ -122,8 +191,24 @@ A proposta de @ridge
 
 ## Lasso
 
-A regressão lasso surgiu com o artigo de @lasso.
+A regressão lasso surgiu com o artigo de @lasso. No caso da regressão linear normal, a diferença entre lasso e ridge pode ser vista na função de perda da estimação mínimos quadrados. Em vez de usar a norma $\ell_2$ (como faz a regressão ridge), a regressão lasso usa a norma $\ell_1$ de beta.
 
+$$
+\hat\beta_{lasso} =
+\arg\min_{\beta} \left\{ SQRes + \lambda_{lasso}\sum_{j=1}^p |\beta_j| \right\},
+$$
+
+Muitas das observações que fizemos para a estimação ridge se aplicam tambpem à regressão lasso. A principal diferênça entre essas técnicas está no fato que a regressão lasso faz, de fato, uma seleção de variáveis. Isso se dá pois a regressão lasso pode zerar os coeficientes de algumas covariáveis.
+
+::: {.callout-note collapse="true"}
+O fato de a regressão lasso poder zerar os coeficientes das covariáveis está associado com a geometria imposta no espaço paramétrico.
+[![@islr pg. 222.](../img/islr_corner.png){width=90%}](https://www.statlearning.com/)
+:::
+
+
+No mesmo banco de dados `Credit`, @islr aplicou a regressão lasso:
+
+[![Exemplo de regressão lasso.](../img/islr_lasso.png){width=90%}](https://www.statlearning.com/)
 
 
 
@@ -136,15 +221,232 @@ A regressão lasso surgiu com o artigo de @lasso.
 "You Can't Always Get What You Want"
 :::
 
+A
+
+### Estudo sobre MSE com dados sintéticos
+
+```{r}
+sqres = function(beta, X, Y) {
+  res = Y - X %*% beta
+  drop(crossprod(res))
+}
+
+sqres_ridge = function(beta, X, Y, lambda) {
+  res = Y - X %*% beta
+  drop(crossprod(res) + lambda * crossprod(beta))
+}
+
+sqres_lasso = function(beta, X, Y, lambda) {
+  res = Y - X %*% beta
+  drop(crossprod(res) + lambda * sum(abs(beta)))
+}
+```
+
+A
+
+::: {.callout-note collapse="true"}
+Note que minimizar `sqres` deve dar o mesmo resultado que `lm`.
+```{r}
+fit = optim(
+  par    = rep(0,ncol(X)),
+  fn     = sqres,
+  X      = X,
+  Y      = Y,
+  method = "BFGS"
+)
+
+round(fit$par, 5) |> `names<-`(paste0("X", 1:ncol(X)))
+
+lm(Y~0+X)
+```
+:::
+
+```{r}
+#| code-fold: true
+#| out-width: "70%"
+#| fig-align: center
+set.seed(12345)
+n = 20
+beta = exp(-seq(-2,2,.5)^2)
+X = rnorm(n*length(beta)) |> matrix(nrow = n, ncol = length(beta))
+Y = X %*% beta + rnorm(n,0,1)
+
+mse_ridge = mse_lasso = numeric()
+
+for (lambda in 0:20) {
+  beta_ridge =
+    optim(
+      par    = rep(0,ncol(X)),
+      fn     = sqres_ridge,
+      X      = X,
+      Y      = Y,
+      lambda = lambda,
+      method = "BFGS"
+    )$par
+
+    mse_ridge[lambda + 1] = mean((beta_ridge - beta)^2)
+
+  beta_lasso =
+    optim(
+      par    = rep(0,ncol(X)),
+      fn     = sqres_lasso,
+      X      = X,
+      Y      = Y,
+      lambda = lambda,
+      method = "BFGS"
+    )$par
+
+    mse_lasso[lambda + 1] = mean((beta_lasso - beta)^2)
+}
+
+plot(mse_ridge,  type="l", lwd = 2, col = 1,
+     ylim = c(0, 0.1),
+     main = "alguns parâmetros muito pequenos",
+     ylab = "MSE", xlab = "lambda")
+lines(mse_lasso, type="l", lwd = 2, col = 2, lty = "aa")
+
+mse_lm = mean((lm(Y~0+X)$coeff - beta)^2)
+abline(h = mse_lm, lwd = 2, col = 3, lty = "44")
+
+legend("topright",
+       legend = c("Ridge", "Lasso", "OLS"),
+       col = c(1, 2, 3),
+       lty = c(1, 2, 4),
+       lwd = 2,
+       bty = "n")
+```
+<details>
+<summary><strong>Comparar estimativas</strong></summary>
+<div class="details-content">
+```{r}
+beta_lasso =
+    optim(
+      par    = rep(0,ncol(X)),
+      fn     = sqres_lasso,
+      X      = X,
+      Y      = Y,
+      lambda = which.min(mse_lasso)-1,
+      method = "BFGS"
+    )$par
+beta_ridge =
+    optim(
+      par    = rep(0,ncol(X)),
+      fn     = sqres_ridge,
+      X      = X,
+      Y      = Y,
+      lambda = which.min(mse_ridge)-1,
+      method = "BFGS"
+    )$par
+beta_lm = lm(Y~0+X)$coef
+
+cbind(beta, beta_lasso, beta_ridge, beta_lm) |>
+  `colnames<-`(c("real", "lasso", "ridge", "lm")) |>
+  knitr::kable(digits = 3, caption = "Estimativas para betas (caso betas pequenos)")
+```
+</div>
+</details>
 
 
+```{r}
+#| code-fold: true
+#| out-width: "70%"
+#| fig-align: center
+set.seed(12345)
+n = 20
+beta = c( rep(1,3), rep(0,5) )
+X = rnorm(n*length(beta)) |> matrix(nrow = n, ncol = length(beta))
+Y = X %*% beta + rnorm(n,0,1)
+
+mse_ridge = mse_lasso = numeric()
+
+for (lambda in 0:20) {
+  beta_ridge =
+    optim(
+      par    = rep(0,ncol(X)),
+      fn     = sqres_ridge,
+      X      = X,
+      Y      = Y,
+      lambda = lambda,
+      method = "BFGS"
+    )$par
+
+    mse_ridge[lambda + 1] = mean((beta_ridge - beta)^2)
+
+  beta_lasso =
+    optim(
+      par    = rep(0,ncol(X)),
+      fn     = sqres_lasso,
+      X      = X,
+      Y      = Y,
+      lambda = lambda,
+      method = "BFGS"
+    )$par
+
+    mse_lasso[lambda + 1] = mean((beta_lasso - beta)^2)
+}
+
+plot(mse_ridge,  type="l", lwd = 2, col = 1,
+     main = "esparsidade nos parâmetros reais",
+     ylim = c(0, 0.1),
+     ylab = "MSE", xlab = "lambda")
+lines(mse_lasso, type="l", lwd = 2, col = 2, lty = "aa")
+legend("topright",
+       legend = c("Ridge", "Lasso"),
+       col = c(1, 2),
+       lty = c(1, 2),
+       lwd = 2,
+       bty = "n")
+```
+<details>
+<summary><strong>Comparar estimativas</strong></summary>
+<div class="details-content">
+```{r}
+beta_lasso =
+    optim(
+      par    = rep(0,ncol(X)),
+      fn     = sqres_lasso,
+      X      = X,
+      Y      = Y,
+      lambda = which.min(mse_lasso)-1,
+      method = "BFGS"
+    )$par
+beta_ridge =
+    optim(
+      par    = rep(0,ncol(X)),
+      fn     = sqres_ridge,
+      X      = X,
+      Y      = Y,
+      lambda = which.min(mse_ridge)-1,
+      method = "BFGS"
+    )$par
+beta_lm = lm(Y~0+X)$coef
+
+cbind(beta, beta_lasso, beta_ridge, beta_lm) |>
+  `colnames<-`(c("real", "lasso", "ridge", "lm")) |>
+  knitr::kable(digits = 3, caption = "Estimativas para betas (caso betas esparsos)")
+```
+</div>
+</details>
 
 
 
 
 ## Elastic net
 
-O artigo @en introduz o elastic net, que nada mais é que uma mistura das técnicas ridge e lasso.
+::: {style="text-align: right"}
+"Can you?"
+:::
+
+O artigo @en introduz o elastic net, que nada mais é que uma mistura das técnicas ridge e lasso. A ideia inicial considera o seguinte estimador:
+
+
+$$
+\begin{aligned}
+\hat\beta_{en}^{naïve}
+&= \arg\min_{\beta} \left\{ SQRes + \lambda_{ridge}\sum_{j=1}^p \beta_j^2 + \lambda_{lasso}\sum_{j=1}^p |\beta_j| \right\}\\
+&= \arg\min_{\beta} \left\{ SQRes + \lambda_{en} \left( \alpha \sum_{j=1}^p \beta_j^2 + (1 - \alpha)\sum_{j=1}^p |\beta_j| \right) \right\},
+\end{aligned}
+$$
 
 
 

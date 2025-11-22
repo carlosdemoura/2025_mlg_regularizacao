@@ -27,3 +27,10 @@ if (!{"pak" %in% rownames(installed.packages())}) install.packages("pak")
 pak::pak(c("matrixcalc", "glmnet"))
 ```
 
+
+# Motivação
+
+Porquê fazer seleção de modelos?
+Porquê regularizar coeficientes é uma boa ideia?
+
+
