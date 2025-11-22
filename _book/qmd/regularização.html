@@ -247,7 +247,6 @@ window.Quarto = {
   <li><a href="#estudo-sobre-mse-com-dados-sintéticos" id="toc-estudo-sobre-mse-com-dados-sintéticos" class="nav-link" data-scroll-target="#estudo-sobre-mse-com-dados-sintéticos"><span class="header-section-number">1.4.1</span> Estudo sobre MSE com dados sintéticos</a></li>
   </ul></li>
   <li><a href="#elastic-net" id="toc-elastic-net" class="nav-link" data-scroll-target="#elastic-net"><span class="header-section-number">1.5</span> Elastic net</a></li>
-  <li><a href="#lidando-com-outliers" id="toc-lidando-com-outliers" class="nav-link" data-scroll-target="#lidando-com-outliers"><span class="header-section-number">1.6</span> Lidando com outliers</a></li>
   </ul>
 </nav>
     </div>
@@ -275,7 +274,13 @@ window.Quarto = {
 
 <section id="seleção-de-variáveis-naïve" class="level2" data-number="1.1">
 <h2 data-number="1.1" class="anchored" data-anchor-id="seleção-de-variáveis-naïve"><span class="header-section-number">1.1</span> Seleção de variáveis naïve</h2>
-<p>Stepwise</p>
+<p>A primeira ideia que alguém pode ter ao querer fazer seleção de modelo é uma ideia estupidamente simples: ajustar cada modelo possível e escolher o melhor. Essa abordagem tem alguns problemas.</p>
+<ul>
+<li>O número de modelos possíveis é dado por <span class="math inline">\(\sum_{i=0}^{n} {n \choose i} \approx \mathcal{O} (n!)\)</span> (<span class="math inline">\(n\)</span> é o número de covariáveis disponíveis), que cresce exponencialmente com <span class="math inline">\(n\)</span>.</li>
+<li>Alguma métrica de ajuste deve ser eleita como a métrica de seleção de modelo: <span class="math inline">\(R^2\)</span>, <span class="math inline">\(EQM_{pred}\)</span>, <span class="math inline">\(C_p\)</span> de Mallow, <span class="math inline">\((A/B)IC\)</span>. Se todas as métricas apontam para o mesmo modelo, <em>mazel tov!</em>; se não, em qual confiar?</li>
+<li>Acúmulo de erros: alguma correção (Bonferroni, Tukey, etc.) deveria ser feita ao analisar os p-valores.</li>
+<li>Engenheiros <del>(e, pior, economistas)</del> gostam dessa ideia.</li>
+</ul>
 <div class="cell" data-layout-align="center">
 <details class="code-fold">
 <summary>Código</summary>
@@ -291,9 +296,9 @@ window.Quarto = {
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lapply</span>(f) <span class="sc">|&gt;</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlist</span>() <span class="sc">|&gt;</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(<span class="at">type =</span> <span class="st">'l'</span>,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="st">""</span>,</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">"número de covariáveis numéricas"</span>,</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">"número de possíveis modelos"</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">"número de covariáveis numéricas"</span>,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">"número de possíveis modelos"</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">main =</span> <span class="st">"grau de complexidade da seleção de modelos naïve"</span></span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>       )</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
@@ -304,15 +309,17 @@ window.Quarto = {
 </div>
 </div>
 </div>
+<p>A seleção de variáveis stepwise lida com esse problema usando o fato que muito desses modelos são encaixados, e em seguida verificando o efeito que a inclusão e/ou exclusão de covariáveis tem nas medidas de ajuste do modelo. Isso evita o ajuste de uma quantidade muito grande de modelos, mas em casos patológicos pode não ser suficiente - e nem é garantido que o melhor modelo será selecionado.</p>
 </section>
 <section id="ridge" class="level2" data-number="1.2">
 <h2 data-number="1.2" class="anchored" data-anchor-id="ridge"><span class="header-section-number">1.2</span> Ridge</h2>
-<p>A técnica Ridge foi a primeira das três técnicas a surgir, no trabalho de <span class="citation" data-cites="ridge">Hoerl &amp; Kennard (<a href="referências.html#ref-ridge" role="doc-biblioref">1970</a>)</span>. Originalmente, os autores buscavam entender como superar problemas em que a matriz de covariáveis <span class="math inline">\(X\)</span> estava mal-especificada. Relembrando que na regressão linear normal, temos que</p>
+<p>A técnica Ridge foi a primeira das três técnicas a surgir, no trabalho de <span class="citation" data-cites="ridge">Hoerl &amp; Kennard (<a href="referências.html#ref-ridge" role="doc-biblioref">1970</a>)</span>. Originalmente, os autores buscavam entender como lidar com problemas em que a matriz de covariáveis <span class="math inline">\(X\)</span> estava mal-especificada. Relembrando que na regressão linear normal, temos que</p>
 <p><span class="math display">\[
 Y = X \beta + \epsilon, \hspace{1cm} \epsilon \sim N_n\bigr( 0, \sigma^2 I_n \bigr)
-\]</span> O estimador de máxima verossimilhança (EMV) de <span class="math inline">\(\beta\)</span> será o mesmo estimador de mínimos quadrados (EMQ)</p>
+\]</span> O estimador de máxima verossimilhança (EMV) de <span class="math inline">\(\beta\)</span> será o mesmo estimador de mínimos quadrados (EMQ).</p>
+<p>Seja <span class="math inline">\(SQRes = (Y - X\beta)^\top(Y - X\beta) = \sum_{i=1}^n \left( y_i - X_i \beta \right)^2 = \sum_{i=1}^n \left( y_i - \beta_0 - \sum_{j=1}^p \beta_j x_{ij} \right)^2\)</span>. Assim,</p>
 <p><span class="math display">\[
-\hat\beta = (X^\top X)^{-1} X^\top Y,
+\hat\beta_{OLS} = \arg\min_{\beta} \left\{ SQRes \right\}= (X^\top X)^{-1} X^\top Y,
 \]</span></p>
 <p>se:</p>
 <ul>
@@ -322,11 +329,11 @@ Y = X \beta + \epsilon, \hspace{1cm} \epsilon \sim N_n\bigr( 0, \sigma^2 I_n \bi
 </ul>
 <p>Além disso, <span class="math inline">\(\hat\beta\)</span> é não viciado, consistente e tem matriz de covariâncias dada por</p>
 <p><span class="math display">\[
-cov\bigr(\hat\beta\bigr) = \sigma^2 (X^\top X)^{-1}.
+cov\bigr(\hat\beta_{OLS}\bigr) = \sigma^2 (X^\top X)^{-1}.
 \]</span></p>
 <p>Uma vez que temos a distribuição do estimador, fica fácil fazer inferência via intervalos de confiança, por exemplo.</p>
 <p><span class="math display">\[
-\hat\beta \sim N_p\left(\beta,\; \sigma^2 (X^\top X)^{-1}\right).
+\hat\beta_{OLS} \sim N_p\left(\beta,\; \sigma^2 (X^\top X)^{-1}\right).
 \]</span></p>
 <p>Nesse sentido, se temos uma matriz de dados problemática - no sentido em que <span class="math inline">\((X^\top X)^{-1}\)</span> não está bem definida, teremos problema de estimação via EMQ.</p>
 <p>Veja o exemplo numérico abaixo.</p>
@@ -338,11 +345,18 @@ cov\bigr(\hat\beta\bigr) = \sigma^2 (X^\top X)^{-1}.
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">cbind</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="dv">2</span><span class="sc">*</span>(<span class="dv">1</span><span class="sc">:</span>n))</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<details>
-<summary>
-<strong>Ver matriz X</strong>
-</summary>
-<div class="details-content">
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Ver matriz X
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
@@ -360,7 +374,8 @@ cov\bigr(\hat\beta\bigr) = \sigma^2 (X^\top X)^{-1}.
 </div>
 </div>
 </div>
-</details>
+</div>
+</div>
 <div class="cell" data-layout-align="center">
 <details class="code-fold">
 <summary>Código</summary>
@@ -388,19 +403,27 @@ Coefficients:
 0.9544      NA  </code></pre>
 </div>
 </div>
-<details>
-<summary>
-<strong>E se a regressão estivesse na outra covariável?</strong>
-</summary>
-<div class="details-content">
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>E se a regressão estivesse na outra covariável?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">cbind</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="dv">2</span><span class="sc">*</span>(<span class="dv">1</span><span class="sc">:</span>n))</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">10</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">cbind</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="dv">2</span><span class="sc">*</span>(<span class="dv">1</span><span class="sc">:</span>n))</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -411,24 +434,32 @@ Coefficients:
 1.954     NA  </code></pre>
 </div>
 </div>
-<p>Detalhes</p>
+<p>Note que, embora a estrutura de regressão esteja na segunda covariável, o modelo só conseguiu estimar um beta - e o alocou na primeira covariável. Apesar de esse exemplo ser simples - e mal especificado, uma vez que há dois modelos idêncicos com parâmetros diferentes -, serve de exemplo de como a matriz <span class="math inline">\(X\)</span> é importante para a boa especificação do modelo.</p>
 </div>
-</details>
-<p>Comentários sobre o modelo não saber selecionar variáveis.</p>
+</div>
+</div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">cbind</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="dv">2</span><span class="sc">*</span>(<span class="dv">1</span><span class="sc">:</span>n))</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>ruido <span class="ot">=</span> <span class="fu">cbind</span>(<span class="fu">rep</span>(<span class="dv">0</span>,n), <span class="fu">rnorm</span>(n,<span class="dv">0</span>,.<span class="dv">1</span>))</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> X <span class="sc">+</span> ruido</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">10</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">cbind</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="dv">2</span><span class="sc">*</span>(<span class="dv">1</span><span class="sc">:</span>n))</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>ruido <span class="ot">=</span> <span class="fu">cbind</span>(<span class="fu">rep</span>(<span class="dv">0</span>,n), <span class="fu">rnorm</span>(n,<span class="dv">0</span>,.<span class="dv">1</span>))</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> X <span class="sc">+</span> ruido</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<details>
-<summary>
-<strong>Ver matriz X</strong>
-</summary>
-<div class="details-content">
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Ver matriz X
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
@@ -440,31 +471,52 @@ Coefficients:
 [5,]    5 10.060589
 [6,]    6 11.818204</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>matrixcalc<span class="sc">::</span><span class="fu">is.singular.matrix</span>(<span class="fu">t</span>(X)<span class="sc">%*%</span>X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(ruido)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     [,1]        [,2]
+[1,]    0  0.05855288
+[2,]    0  0.07094660
+[3,]    0 -0.01093033
+[4,]    0 -0.04534972
+[5,]    0  0.06058875
+[6,]    0 -0.18179560</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>matrixcalc<span class="sc">::</span><span class="fu">is.singular.matrix</span>(<span class="fu">t</span>(X)<span class="sc">%*%</span>X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] FALSE</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">eigen</span>(<span class="fu">t</span>(X)<span class="sc">%*%</span>X)<span class="sc">$</span>values</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">eigen</span>(<span class="fu">t</span>(X)<span class="sc">%*%</span>X)<span class="sc">$</span>values</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1.918025e+03 1.070613e-02</code></pre>
 </div>
 </div>
 </div>
-</details>
+</div>
+</div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X) <span class="sc">|&gt;</span> <span class="fu">summary</span>()</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
 lm(formula = Y ~ 0 + X)
 
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-0.8382 -0.4545  0.1118  0.3098  1.9804 
+
 Coefficients:
-    X1      X2  
- 6.658  -2.820  </code></pre>
+   Estimate Std. Error t value Pr(&gt;|t|)
+X1    6.658      7.724   0.862    0.414
+X2   -2.820      3.871  -0.729    0.487
+
+Residual standard error: 0.8939 on 8 degrees of freedom
+Multiple R-squared:  0.9846,    Adjusted R-squared:  0.9808 
+F-statistic: 256.5 on 2 and 8 DF,  p-value: 5.558e-08</code></pre>
 </div>
 </div>
-<p>Comentários sobre combinações lineares, parcimônia e inflação da variância na inferência.</p>
-<p>A proposta de <span class="citation" data-cites="ridge">Hoerl &amp; Kennard (<a href="referências.html#ref-ridge" role="doc-biblioref">1970</a>)</span> é adicionar um certo múltiplo da matriz identidade à <span class="math inline">\(X^\top X\)</span>, de modo que seja possível superar os problemas de uma matriz <span class="math inline">\(X\)</span> mal especificada. <span class="citation" data-cites="islr">James, Witten, Hastie, &amp; Tibshirani (<a href="referências.html#ref-islr" role="doc-biblioref">2021</a>)</span> mostra que isso é equivalente a adicionar uma punição no processo de estimação por mínimos quadrados. Seja <span class="math inline">\(SQRes = (Y - X\beta)^\top(Y - X\beta)= \sum_{i=1}^n \left( y_i - \beta_0 - \sum_{j=1}^p \beta_j x_{ij} \right)^2\)</span>, assim:</p>
+<p>Nesse segundo cenário, após a inclusão de um ruído pequeno, a colinearidade deixa de ser exata, mas permanece quase perfeita. Embora exista <span class="math inline">\((X^\top X)\)</span>, os autovalores dassa matriz estão desbalanceados.</p>
+<p>Do ponto de vista da modelagem, esses exemplos reforçam a importância da parcimônia: incluir mais covariáveis não implica num modelo mais bem ajustado. Quando novas covariáveis carregam essencialmente a mesma informação já contida nas demais, o modelo se torna artificialmente mais complexo e mais imprevisível.</p>
+<p>A proposta de <span class="citation" data-cites="ridge">Hoerl &amp; Kennard (<a href="referências.html#ref-ridge" role="doc-biblioref">1970</a>)</span> é adicionar um certo múltiplo da matriz identidade à <span class="math inline">\(X^\top X\)</span>, de modo que seja possível superar os problemas de uma matriz <span class="math inline">\(X\)</span> mal especificada. <span class="citation" data-cites="islr">James, Witten, Hastie, &amp; Tibshirani (<a href="referências.html#ref-islr" role="doc-biblioref">2021</a>)</span> mostra que isso é equivalente a adicionar uma punição no processo de estimação por mínimos quadrados.</p>
 <p><span class="math display">\[
 \hat\beta_{ridge} =
 \arg\min_{\beta} \left\{ SQRes + \lambda_{ridge}\sum_{j=1}^p \beta_j^2 \right\},
@@ -472,7 +524,7 @@ Coefficients:
 <p>em que <span class="math inline">\(\lambda_{ridge}\)</span> é uma constante positiva (escolhida pelo pesquisador) que dá o peso dessa punição.</p>
 <p>Note que:</p>
 <ul>
-<li>À medida que <span class="math inline">\(\lambda\)</span> cresce menores ficam as estimativas dos betas, <span class="math inline">\(\hat\beta_{ridge} \rightarrow 0,\ \lambda_{ridge} \rightarrow \infty\)</span>.</li>
+<li>À medida que <span class="math inline">\(\lambda\)</span> cresce, menores ficam as estimativas dos betas, <span class="math inline">\(\hat\beta_{ridge} \rightarrow 0,\ \lambda_{ridge} \rightarrow \infty\)</span>.</li>
 <li>Não faz sentido incluir o intercepto no processo de shrinkage, pois <span class="math inline">\(g(\beta_0)\)</span> é o valor esperado da variável resposta dado que as demais covariáveis são zero, em que <span class="math inline">\(g\)</span> é uma função de ligação.</li>
 <li>Fica claro que a depender do valor de <span class="math inline">\(\lambda\)</span> que escolhemos, estamos incluindo algum viés no modelo.</li>
 <li>A estimação ridge diminui as estimativas dos betas na mesma proporção (se comparada com o MMQ tradicional).</li>
@@ -515,7 +567,7 @@ Aviso
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>A técnica ridge pode ser muito sensível à escala das covariáveis. Nesse sentido, vale a pena padronizar as covariáveis pelo desvio-padrão para evitar a influência desse efeito.</p>
+<p>A técnica ridge pode ser muito sensível à escala das covariáveis. Por isso, vale a pena padronizar as covariáveis pelo desvio-padrão para evitar a influência desse efeito.</p>
 </div>
 </div>
 </section>
@@ -526,9 +578,9 @@ Aviso
 \hat\beta_{lasso} =
 \arg\min_{\beta} \left\{ SQRes + \lambda_{lasso}\sum_{j=1}^p |\beta_j| \right\},
 \]</span></p>
-<p>Muitas das observações que fizemos para a estimação ridge se aplicam tambpem à regressão lasso. A principal diferênça entre essas técnicas está no fato que a regressão lasso faz, de fato, uma seleção de variáveis. Isso se dá pois a regressão lasso pode zerar os coeficientes de algumas covariáveis.</p>
+<p>Muitas das observações que fizemos para a estimação ridge se aplicam também à regressão lasso. A principal diferença entre essas técnicas está no fato de que a regressão lasso faz, de fato, uma seleção de variáveis. Isso se dá pois a regressão lasso pode zerar os coeficientes de algumas covariáveis.</p>
 <div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -537,7 +589,7 @@ Nota
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>O fato de a regressão lasso poder zerar os coeficientes das covariáveis está associado com a geometria imposta no espaço paramétrico. <a href="https://www.statlearning.com/"><img src="../img/islr_corner.png" class="img-fluid" style="width:90.0%" alt="James et al. (2021) pg. 222."></a></p>
 </div>
@@ -556,28 +608,28 @@ Nota
 <div style="text-align: right">
 <p>“You Can’t Always Get What You Want”</p>
 </div>
-<p>A</p>
+<p>Apesar de partirem de ideias semelhantes, há algumas diferenças práticas entre elas. De acordo com <span class="citation" data-cites="en_glm2">J. H. Friedman, Hastie, &amp; Tibshirani (<a href="referências.html#ref-en_glm2" role="doc-biblioref">2010</a>)</span>, a regressão ridge é conhecida por diminuir os coeficientes de covariáveis muito correlacionadas, permitindo que eles “tomem emprestada a força uns dos outros”. No caso extremo de <span class="math inline">\(k\)</span> preditores iguais estimados juntos, a regressão ridge faria uma estimativa igual a <span class="math inline">\(1/k\)</span> do que teríamos se fosse ajustado um modelo só com um deles (<em>grouping effect</em>). Nesse sentido, ela vai ter um melhor desempenho no caso em que temos muitos preditores com coeficientes pequenos (mas não nulos).</p>
+<p>A regressão lasso, por sua vez tende a tratar covariáveis muito correlacionadas como uma só fonte de variabilidade (escolhendo uma - nem sempre a melhor - para estimar o coeficiente e ignorando as outras). Assim, ela funciona melhor quando há esparsidade nos coeficientes, isto é, muitos deles são próximos a zero e só numa parte deles há de fato regressão. Isso é mais comum em grandes bancos de dados.</p>
 <section id="estudo-sobre-mse-com-dados-sintéticos" class="level3" data-number="1.4.1">
 <h3 data-number="1.4.1" class="anchored" data-anchor-id="estudo-sobre-mse-com-dados-sintéticos"><span class="header-section-number">1.4.1</span> Estudo sobre MSE com dados sintéticos</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>sqres <span class="ot">=</span> <span class="cf">function</span>(beta, X, Y) {</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">=</span> Y <span class="sc">-</span> X <span class="sc">%*%</span> beta</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop</span>(<span class="fu">crossprod</span>(res))</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>sqres_ridge <span class="ot">=</span> <span class="cf">function</span>(beta, X, Y, lambda) {</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">=</span> Y <span class="sc">-</span> X <span class="sc">%*%</span> beta</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop</span>(<span class="fu">crossprod</span>(res) <span class="sc">+</span> lambda <span class="sc">*</span> <span class="fu">crossprod</span>(beta))</span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>sqres_lasso <span class="ot">=</span> <span class="cf">function</span>(beta, X, Y, lambda) {</span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">=</span> Y <span class="sc">-</span> X <span class="sc">%*%</span> beta</span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop</span>(<span class="fu">crossprod</span>(res) <span class="sc">+</span> lambda <span class="sc">*</span> <span class="fu">sum</span>(<span class="fu">abs</span>(beta)))</span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>sqres <span class="ot">=</span> <span class="cf">function</span>(beta, X, Y) {</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">=</span> Y <span class="sc">-</span> X <span class="sc">%*%</span> beta</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop</span>(<span class="fu">crossprod</span>(res))</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>sqres_ridge <span class="ot">=</span> <span class="cf">function</span>(beta, X, Y, lambda) {</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">=</span> Y <span class="sc">-</span> X <span class="sc">%*%</span> beta</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop</span>(<span class="fu">crossprod</span>(res) <span class="sc">+</span> lambda <span class="sc">*</span> <span class="fu">crossprod</span>(beta))</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>sqres_lasso <span class="ot">=</span> <span class="cf">function</span>(beta, X, Y, lambda) {</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">=</span> Y <span class="sc">-</span> X <span class="sc">%*%</span> beta</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop</span>(<span class="fu">crossprod</span>(res) <span class="sc">+</span> lambda <span class="sc">*</span> <span class="fu">sum</span>(<span class="fu">abs</span>(beta)))</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>A</p>
 <div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -586,24 +638,24 @@ Nota
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <p>Note que minimizar <code>sqres</code> deve dar o mesmo resultado que <code>lm</code>.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">optim</span>(</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">fn     =</span> sqres,</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">X      =</span> X,</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Y      =</span> Y,</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"BFGS"</span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(fit<span class="sc">$</span>par, <span class="dv">5</span>) <span class="sc">|&gt;</span> <span class="st">`</span><span class="at">names&lt;-</span><span class="st">`</span>(<span class="fu">paste0</span>(<span class="st">"X"</span>, <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(X)))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">optim</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">fn     =</span> sqres,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">X      =</span> X,</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Y      =</span> Y,</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(fit<span class="sc">$</span>par, <span class="dv">5</span>) <span class="sc">|&gt;</span> <span class="st">`</span><span class="at">names&lt;-</span><span class="st">`</span>(<span class="fu">paste0</span>(<span class="st">"X"</span>, <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(X)))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>      X1       X2 
  6.65825 -2.81988 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -620,55 +672,55 @@ Coefficients:
 <div class="cell" data-layout-align="center">
 <details class="code-fold">
 <summary>Código</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">20</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">exp</span>(<span class="sc">-</span><span class="fu">seq</span>(<span class="sc">-</span><span class="dv">2</span>,<span class="dv">2</span>,.<span class="dv">5</span>)<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">rnorm</span>(n<span class="sc">*</span><span class="fu">length</span>(beta)) <span class="sc">|&gt;</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> n, <span class="at">ncol =</span> <span class="fu">length</span>(beta))</span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n,<span class="dv">0</span>,<span class="dv">1</span>)</span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>mse_ridge <span class="ot">=</span> mse_lasso <span class="ot">=</span> <span class="fu">numeric</span>()</span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (lambda <span class="cf">in</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">20</span>) {</span>
-<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  beta_ridge <span class="ot">=</span></span>
-<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
-<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
-<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_ridge,</span>
-<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
-<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
-<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> lambda,</span>
-<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
-<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
-<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>    mse_ridge[lambda <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">=</span> <span class="fu">mean</span>((beta_ridge <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>  beta_lasso <span class="ot">=</span></span>
-<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
-<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
-<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_lasso,</span>
-<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
-<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
-<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> lambda,</span>
-<span id="cb26-29"><a href="#cb26-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
-<span id="cb26-30"><a href="#cb26-30" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
-<span id="cb26-31"><a href="#cb26-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-32"><a href="#cb26-32" aria-hidden="true" tabindex="-1"></a>    mse_lasso[lambda <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">=</span> <span class="fu">mean</span>((beta_lasso <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb26-33"><a href="#cb26-33" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb26-34"><a href="#cb26-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-35"><a href="#cb26-35" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mse_ridge,  <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">1</span>,</span>
-<span id="cb26-36"><a href="#cb26-36" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.1</span>),</span>
-<span id="cb26-37"><a href="#cb26-37" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"alguns parâmetros muito pequenos"</span>,</span>
-<span id="cb26-38"><a href="#cb26-38" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"MSE"</span>, <span class="at">xlab =</span> <span class="st">"lambda"</span>)</span>
-<span id="cb26-39"><a href="#cb26-39" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(mse_lasso, <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">2</span>, <span class="at">lty =</span> <span class="st">"aa"</span>)</span>
-<span id="cb26-40"><a href="#cb26-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-41"><a href="#cb26-41" aria-hidden="true" tabindex="-1"></a>mse_lm <span class="ot">=</span> <span class="fu">mean</span>((<span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)<span class="sc">$</span>coeff <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb26-42"><a href="#cb26-42" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> mse_lm, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">3</span>, <span class="at">lty =</span> <span class="st">"44"</span>)</span>
-<span id="cb26-43"><a href="#cb26-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-44"><a href="#cb26-44" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>,</span>
-<span id="cb26-45"><a href="#cb26-45" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">"Ridge"</span>, <span class="st">"Lasso"</span>, <span class="st">"OLS"</span>),</span>
-<span id="cb26-46"><a href="#cb26-46" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>),</span>
-<span id="cb26-47"><a href="#cb26-47" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">4</span>),</span>
-<span id="cb26-48"><a href="#cb26-48" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="dv">2</span>,</span>
-<span id="cb26-49"><a href="#cb26-49" aria-hidden="true" tabindex="-1"></a>       <span class="at">bty =</span> <span class="st">"n"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">20</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">exp</span>(<span class="sc">-</span><span class="fu">seq</span>(<span class="sc">-</span><span class="dv">2</span>,<span class="dv">2</span>,.<span class="dv">5</span>)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">rnorm</span>(n<span class="sc">*</span><span class="fu">length</span>(beta)) <span class="sc">|&gt;</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> n, <span class="at">ncol =</span> <span class="fu">length</span>(beta))</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n,<span class="dv">0</span>,<span class="dv">1</span>)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>mse_ridge <span class="ot">=</span> mse_lasso <span class="ot">=</span> <span class="fu">numeric</span>()</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (lambda <span class="cf">in</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">20</span>) {</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  beta_ridge <span class="ot">=</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_ridge,</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> lambda,</span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>    mse_ridge[lambda <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">=</span> <span class="fu">mean</span>((beta_ridge <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>  beta_lasso <span class="ot">=</span></span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_lasso,</span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> lambda,</span>
+<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
+<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>    mse_lasso[lambda <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">=</span> <span class="fu">mean</span>((beta_lasso <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb28-33"><a href="#cb28-33" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb28-34"><a href="#cb28-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-35"><a href="#cb28-35" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="dv">0</span><span class="sc">:</span>(<span class="fu">length</span>(mse_ridge)<span class="sc">-</span><span class="dv">1</span>), mse_ridge,  <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">1</span>,</span>
+<span id="cb28-36"><a href="#cb28-36" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.1</span>),</span>
+<span id="cb28-37"><a href="#cb28-37" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"alguns parâmetros muito pequenos"</span>,</span>
+<span id="cb28-38"><a href="#cb28-38" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"MSE"</span>, <span class="at">xlab =</span> <span class="st">"lambda"</span>)</span>
+<span id="cb28-39"><a href="#cb28-39" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(<span class="dv">0</span><span class="sc">:</span>(<span class="fu">length</span>(mse_lasso)<span class="sc">-</span><span class="dv">1</span>), mse_lasso, <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">2</span>, <span class="at">lty =</span> <span class="st">"aa"</span>)</span>
+<span id="cb28-40"><a href="#cb28-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-41"><a href="#cb28-41" aria-hidden="true" tabindex="-1"></a>mse_lm <span class="ot">=</span> <span class="fu">mean</span>((<span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)<span class="sc">$</span>coeff <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb28-42"><a href="#cb28-42" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> mse_lm, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">3</span>, <span class="at">lty =</span> <span class="st">"44"</span>)</span>
+<span id="cb28-43"><a href="#cb28-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-44"><a href="#cb28-44" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>,</span>
+<span id="cb28-45"><a href="#cb28-45" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">"Ridge"</span>, <span class="st">"Lasso"</span>, <span class="st">"OLS"</span>),</span>
+<span id="cb28-46"><a href="#cb28-46" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>),</span>
+<span id="cb28-47"><a href="#cb28-47" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">4</span>),</span>
+<span id="cb28-48"><a href="#cb28-48" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="dv">2</span>,</span>
+<span id="cb28-49"><a href="#cb28-49" aria-hidden="true" tabindex="-1"></a>       <span class="at">bty =</span> <span class="st">"n"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -678,35 +730,43 @@ Coefficients:
 </div>
 </div>
 </div>
-<details>
-<summary>
-<strong>Comparar estimativas</strong>
-</summary>
-<div class="details-content">
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Comparar estimativas
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Dados gerados a partir de coeficientes pequenos (não nulos).</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>beta_lasso <span class="ot">=</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_lasso,</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> <span class="fu">which.min</span>(mse_lasso)<span class="sc">-</span><span class="dv">1</span>,</span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>beta_ridge <span class="ot">=</span></span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_ridge,</span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
-<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
-<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> <span class="fu">which.min</span>(mse_ridge)<span class="sc">-</span><span class="dv">1</span>,</span>
-<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
-<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
-<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>beta_lm <span class="ot">=</span> <span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)<span class="sc">$</span>coef</span>
-<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a><span class="fu">cbind</span>(beta, beta_lasso, beta_ridge, beta_lm) <span class="sc">|&gt;</span></span>
-<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">colnames&lt;-</span><span class="st">`</span>(<span class="fu">c</span>(<span class="st">"real"</span>, <span class="st">"lasso"</span>, <span class="st">"ridge"</span>, <span class="st">"lm"</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>, <span class="at">caption =</span> <span class="st">"Estimativas para betas (caso betas pequenos)"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>beta_lasso <span class="ot">=</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_lasso,</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> <span class="fu">which.min</span>(mse_lasso)<span class="sc">-</span><span class="dv">1</span>,</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>beta_ridge <span class="ot">=</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_ridge,</span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> <span class="fu">which.min</span>(mse_ridge)<span class="sc">-</span><span class="dv">1</span>,</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>beta_lm <span class="ot">=</span> <span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)<span class="sc">$</span>coef</span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a><span class="fu">cbind</span>(beta, beta_lasso, beta_ridge, beta_lm) <span class="sc">|&gt;</span></span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">colnames&lt;-</span><span class="st">`</span>(<span class="fu">c</span>(<span class="st">"real"</span>, <span class="st">"lasso"</span>, <span class="st">"ridge"</span>, <span class="st">"lm"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>, <span class="at">caption =</span> <span class="st">"Estimativas para betas (caso betas pequenos)"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Estimativas para betas (caso betas pequenos)</caption>
@@ -788,55 +848,56 @@ Coefficients:
 </div>
 </div>
 </div>
-</details>
+</div>
+</div>
 <div class="cell" data-layout-align="center">
 <details class="code-fold">
 <summary>Código</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">20</span></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>( <span class="fu">rep</span>(<span class="dv">1</span>,<span class="dv">3</span>), <span class="fu">rep</span>(<span class="dv">0</span>,<span class="dv">5</span>) )</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">rnorm</span>(n<span class="sc">*</span><span class="fu">length</span>(beta)) <span class="sc">|&gt;</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> n, <span class="at">ncol =</span> <span class="fu">length</span>(beta))</span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n,<span class="dv">0</span>,<span class="dv">1</span>)</span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>mse_ridge <span class="ot">=</span> mse_lasso <span class="ot">=</span> <span class="fu">numeric</span>()</span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (lambda <span class="cf">in</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">20</span>) {</span>
-<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  beta_ridge <span class="ot">=</span></span>
-<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
-<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
-<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_ridge,</span>
-<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
-<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
-<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> lambda,</span>
-<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
-<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
-<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>    mse_ridge[lambda <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">=</span> <span class="fu">mean</span>((beta_ridge <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>  beta_lasso <span class="ot">=</span></span>
-<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
-<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
-<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_lasso,</span>
-<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
-<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
-<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> lambda,</span>
-<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
-<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
-<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>    mse_lasso[lambda <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">=</span> <span class="fu">mean</span>((beta_lasso <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb28-33"><a href="#cb28-33" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb28-34"><a href="#cb28-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-35"><a href="#cb28-35" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(mse_ridge,  <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">1</span>,</span>
-<span id="cb28-36"><a href="#cb28-36" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"esparsidade nos parâmetros reais"</span>,</span>
-<span id="cb28-37"><a href="#cb28-37" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.1</span>),</span>
-<span id="cb28-38"><a href="#cb28-38" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"MSE"</span>, <span class="at">xlab =</span> <span class="st">"lambda"</span>)</span>
-<span id="cb28-39"><a href="#cb28-39" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(mse_lasso, <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">2</span>, <span class="at">lty =</span> <span class="st">"aa"</span>)</span>
-<span id="cb28-40"><a href="#cb28-40" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>,</span>
-<span id="cb28-41"><a href="#cb28-41" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">"Ridge"</span>, <span class="st">"Lasso"</span>),</span>
-<span id="cb28-42"><a href="#cb28-42" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>),</span>
-<span id="cb28-43"><a href="#cb28-43" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>),</span>
-<span id="cb28-44"><a href="#cb28-44" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="dv">2</span>,</span>
-<span id="cb28-45"><a href="#cb28-45" aria-hidden="true" tabindex="-1"></a>       <span class="at">bty =</span> <span class="st">"n"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">20</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>( <span class="fu">rep</span>(<span class="dv">1</span>,<span class="dv">3</span>), <span class="fu">rep</span>(<span class="dv">0</span>,<span class="dv">5</span>) )</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">rnorm</span>(n<span class="sc">*</span><span class="fu">length</span>(beta)) <span class="sc">|&gt;</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> n, <span class="at">ncol =</span> <span class="fu">length</span>(beta))</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n,<span class="dv">0</span>,<span class="dv">1</span>)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>mse_ridge <span class="ot">=</span> mse_lasso <span class="ot">=</span> <span class="fu">numeric</span>()</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (lambda <span class="cf">in</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">20</span>) {</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>  beta_ridge <span class="ot">=</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_ridge,</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> lambda,</span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>    mse_ridge[lambda <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">=</span> <span class="fu">mean</span>((beta_ridge <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>  beta_lasso <span class="ot">=</span></span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_lasso,</span>
+<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
+<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
+<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> lambda,</span>
+<span id="cb30-29"><a href="#cb30-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb30-30"><a href="#cb30-30" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
+<span id="cb30-31"><a href="#cb30-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-32"><a href="#cb30-32" aria-hidden="true" tabindex="-1"></a>    mse_lasso[lambda <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">=</span> <span class="fu">mean</span>((beta_lasso <span class="sc">-</span> beta)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb30-33"><a href="#cb30-33" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb30-34"><a href="#cb30-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-35"><a href="#cb30-35" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="dv">0</span><span class="sc">:</span>(<span class="fu">length</span>(mse_ridge)<span class="sc">-</span><span class="dv">1</span>), mse_ridge,  <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">1</span>,</span>
+<span id="cb30-36"><a href="#cb30-36" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"esparsidade nos parâmetros reais"</span>,</span>
+<span id="cb30-37"><a href="#cb30-37" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.1</span>),</span>
+<span id="cb30-38"><a href="#cb30-38" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"MSE"</span>, <span class="at">xlab =</span> <span class="st">"lambda"</span>)</span>
+<span id="cb30-39"><a href="#cb30-39" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(<span class="dv">0</span><span class="sc">:</span>(<span class="fu">length</span>(mse_lasso)<span class="sc">-</span><span class="dv">1</span>), mse_lasso, <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lwd =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="dv">2</span>, <span class="at">lty =</span> <span class="st">"aa"</span>)</span>
+<span id="cb30-40"><a href="#cb30-40" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>,</span>
+<span id="cb30-41"><a href="#cb30-41" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">"Ridge"</span>, <span class="st">"Lasso"</span>),</span>
+<span id="cb30-42"><a href="#cb30-42" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>),</span>
+<span id="cb30-43"><a href="#cb30-43" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>),</span>
+<span id="cb30-44"><a href="#cb30-44" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd =</span> <span class="dv">2</span>,</span>
+<span id="cb30-45"><a href="#cb30-45" aria-hidden="true" tabindex="-1"></a>       <span class="at">bty =</span> <span class="st">"n"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -846,35 +907,43 @@ Coefficients:
 </div>
 </div>
 </div>
-<details>
-<summary>
-<strong>Comparar estimativas</strong>
-</summary>
-<div class="details-content">
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Comparar estimativas
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Dados gerados a partir de coeficientes esparsos.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>beta_lasso <span class="ot">=</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_lasso,</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> <span class="fu">which.min</span>(mse_lasso)<span class="sc">-</span><span class="dv">1</span>,</span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>beta_ridge <span class="ot">=</span></span>
-<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
-<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
-<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_ridge,</span>
-<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
-<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
-<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> <span class="fu">which.min</span>(mse_ridge)<span class="sc">-</span><span class="dv">1</span>,</span>
-<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
-<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
-<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>beta_lm <span class="ot">=</span> <span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)<span class="sc">$</span>coef</span>
-<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a><span class="fu">cbind</span>(beta, beta_lasso, beta_ridge, beta_lm) <span class="sc">|&gt;</span></span>
-<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">colnames&lt;-</span><span class="st">`</span>(<span class="fu">c</span>(<span class="st">"real"</span>, <span class="st">"lasso"</span>, <span class="st">"ridge"</span>, <span class="st">"lm"</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>, <span class="at">caption =</span> <span class="st">"Estimativas para betas (caso betas esparsos)"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>beta_lasso <span class="ot">=</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_lasso,</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> <span class="fu">which.min</span>(mse_lasso)<span class="sc">-</span><span class="dv">1</span>,</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>beta_ridge <span class="ot">=</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_ridge,</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">X      =</span> X,</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">Y      =</span> Y,</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> <span class="fu">which.min</span>(mse_ridge)<span class="sc">-</span><span class="dv">1</span>,</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>beta_lm <span class="ot">=</span> <span class="fu">lm</span>(Y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>X)<span class="sc">$</span>coef</span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a><span class="fu">cbind</span>(beta, beta_lasso, beta_ridge, beta_lm) <span class="sc">|&gt;</span></span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">colnames&lt;-</span><span class="st">`</span>(<span class="fu">c</span>(<span class="st">"real"</span>, <span class="st">"lasso"</span>, <span class="st">"ridge"</span>, <span class="st">"lm"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>, <span class="at">caption =</span> <span class="st">"Estimativas para betas (caso betas esparsos)"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Estimativas para betas (caso betas esparsos)</caption>
@@ -949,7 +1018,9 @@ Coefficients:
 </div>
 </div>
 </div>
-</details>
+</div>
+</div>
+<p>Esse exemplo simples mostra como nem a regressão lasso nem a regressão ridge vão ser uniformemente superiores uma a outra em todos os cenários. Isso evidencia a necessidade do uso de validação cruzada, tanto para sabermos qual técnica usar quanto para acharmos o <span class="math inline">\(\lambda\)</span> ótimo.</p>
 </section>
 </section>
 <section id="elastic-net" class="level2" data-number="1.5">
@@ -965,28 +1036,17 @@ Coefficients:
 &amp;= \arg\min_{\beta} \left\{ SQRes + \lambda_{en} \left( \alpha \sum_{j=1}^p \beta_j^2 + (1 - \alpha)\sum_{j=1}^p |\beta_j| \right) \right\},
 \end{aligned}
 \]</span></p>
-</section>
-<section id="lidando-com-outliers" class="level2" data-number="1.6">
-<h2 data-number="1.6" class="anchored" data-anchor-id="lidando-com-outliers"><span class="header-section-number">1.6</span> Lidando com outliers</h2>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>); x <span class="ot">=</span> <span class="fu">rnorm</span>(<span class="dv">20</span>); e <span class="ot">=</span> <span class="fu">rt</span>(<span class="dv">20</span>, <span class="dv">1</span>); y <span class="ot">=</span> <span class="dv">2</span><span class="sc">*</span>x <span class="sc">+</span> e; <span class="fu">plot</span>(y<span class="sc">~</span>x); <span class="fu">lm</span>(y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>x)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="regularização_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = y ~ 0 + x)
-
-Coefficients:
-    x  
-6.136  </code></pre>
-</div>
-</div>
+<p>em que:</p>
+<ul>
+<li><span class="math inline">\(\lambda_{ridge}\)</span> e <span class="math inline">\(\lambda_{lasso}\)</span> são os coeficientes associados às penalidades <span class="math inline">\(\ell_2\)</span> e <span class="math inline">\(\ell_1\)</span>, respectivamente;</li>
+<li><span class="math inline">\(\alpha \in [0,1]\)</span> é o peso da penalidade <span class="math inline">\(\ell_2\)</span> e <span class="math inline">\(\lambda_en\)</span> é uma média das penalidades somadas.</li>
+</ul>
+<p>A regressão elastic net goza das seguintes propriedades:</p>
+<ul>
+<li>É possível que todas as covariáveis sejam selecionadas, como a regressão ridge;</li>
+<li>Assim como a regressão lasso, alguns coeficientes podem ser estimados como zero (seleção de variáveis);</li>
+<li>Em cenários com preditores muito parecidos, a elastic net pode agir como a regressão ridge (<em>grouping effect</em>).</li>
+</ul>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list" style="display: none">

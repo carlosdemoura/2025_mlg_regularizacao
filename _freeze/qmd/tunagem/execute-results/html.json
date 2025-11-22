@@ -3,9 +3,7 @@
   "result": {
     "engine": "knitr",
     "markdown": "# Tunagem\n\n[![Alice in Wonderland](../img/alice-shrinking.gif){width=50%}](https://tenor.com/view/alice-shrinking-drink-me-alice-in-wonderland-wonderland-gif-19278503)\n\nValidação cruzada\n\n\n::: {.cell}\n\n```{.r .cell-code}\n1\n```\n\n::: {.cell-output .cell-output-stdout}\n\n```\n[1] 1\n```\n\n\n:::\n:::\n\n\n## Warm start\n\n@en_glm",
-    "supporting": [
-      "tunagem_files"
-    ],
+    "supporting": [],
     "filters": [
       "rmarkdown/pagebreak.lua"
     ],

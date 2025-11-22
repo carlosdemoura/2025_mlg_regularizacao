@@ -9,7 +9,8 @@ Tom Zé
 :::
 
 Este é o [material auxiliar](https://github.com/carlosdemoura/2025_mlg_regularizacao) da apresentação do trabalho final do curso de Modelos Lineares Generalizados (MLGs) (DEST-UFMG, 2025/2).
-O tema é regularização em MLGs, em específico os métodos de regularização ridge, lasso e elastic net e este [quarto book](https://quarto.org/) está dividido da seguinte forma:
+O tema é regularização em MLGs, em específico os métodos de regularização ridge, lasso e elastic net.
+Este [quarto book](https://quarto.org/) está dividido da seguinte forma:
 
 * Definição de regularização e apresentação dos métodos de shrinkage, com exemplos de regressão normal;
 * Estimação dos parâmetros em MLG com penalização;
@@ -24,13 +25,21 @@ Alguns pacotes que usaremos estão abaixo listados.
 #| eval: false
 if (!{"pak" %in% rownames(installed.packages())}) install.packages("pak")
 
-pak::pak(c("matrixcalc", "glmnet"))
+pak::pak(c("matrixcalc", "glmnet", "tidyverse"))
 ```
 
 
 # Motivação
 
 Porquê fazer seleção de modelos?
+
+* Com o advento da big data, cada vez mais aparecem problemas de regressão com muitas variáveis;
+* Muitas variáveis podem estar altamente correlacionadas de modo que elas dizem a mesma coisa sobre o problema: precisamos de uma técnica para selecionar variáveis (preferência por modelos parcimoniosos);
+* Se há muitas covariáveis correlacionadas, os modelos de estimação convencionais podem ter problemas e confundir a origem dos efeitos de regressão (falta de acurácia);
+* A inclusão de muitas covariáveis no modelo tem o efeito conhecido de aumento da variância, fazendo com que as previsões sejam mais incertas.
+
 Porquê regularizar coeficientes é uma boa ideia?
 
-
+A regularização - _regularization_ ou _shrinkage_ (diminuição) em inglês - de coeficientes é feita ajustando-se um modelo com todos os coeficientes possíveis, mas há algum mecanismo que que dificulta fazer com que todos eles possam estar longe de zero.
+Por isso os coeficientes diminuem (_honey, i shrunk the kids!_) em relação à estimação de mínimos quadrados ordinária. Em alguns casos eles são estimados como zero mesmo!
+Isso tem o efeito de reduzir a variância das estimações e produzir modelos mais parcimoniosos.

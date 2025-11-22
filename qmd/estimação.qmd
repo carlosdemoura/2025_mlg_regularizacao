@@ -11,7 +11,35 @@ Tom Zé
 ## Regularização como uma função de perda
 
 Até agora vimos exemplos de como a regularização pode ser vista como uma função de perda na estimação de mínimos quadrados. Essa ideia pode ser estendida para a estimação via máxima verossimilhança (como veremos adiante).
-Antes disso, mostraremos um exemplo de como a regressão ridge e lasso diminuem os coeficiente na prática.
+Antes disso, mostraremos um exemplo (retirado de @islr) de como a regressão ridge e lasso diminuem os coeficiente na prática.
+
+Considere o caso em que $n = p$, $X = I_n$, e não temos intercepto. Assim $\hat\beta_{OLS} = Y$. Nesse caso, é possível mostrar que 
+
+$$
+\hat\beta_j^{ridge} = \frac{Y_j}{1 + \lambda}
+$$
+e
+
+$$
+\hat\beta_j^{lasso} = 
+\begin{cases}
+Y_j - \lambda/2, & \text{se } Y_j > \lambda/2;\\
+Y_j + \lambda/2, & \text{se } Y_j < - \lambda/2;\\
+0, & \text{se } -\lambda/2 \leq Y_j \leq \lambda/2.
+\end{cases}
+$$
+
+Com esse exemplo simples, podemos entender porque a regressão ridge nunca iguala os coeficientes a zero, coisa que a lasso pode fazer. Essa característica de zerar coeficientes a depender do valor que os dados assumem é conhecido como _soft-tresholding_ (limiar suave). De acordo com @en, a elastic net mistura tanto a shinkage da regressão ridge quanto o soft tresholding da lasso.
+
+
+[![Gráfico das condições acima.](../img/islr_soft-tresholding.png){width=90%}](https://www.statlearning.com/)
+
+
+
+
+
+
+
 
 
 ## Regularização como uma restrição do espaço paramétrico
@@ -125,6 +153,14 @@ $$
 $$
 :::
 
+
+
+
+
+
+
+
+
 ## Estudo com dados simulados
 
 ```{r}
@@ -172,7 +208,8 @@ Sabemos que no caso da Poisson, a função de ligação canônica é o log e a f
 
 ```{r}
 sqres_en = function(beta, w, z) {
-  sum(  w * (z - X %*% beta)^2  ) / (2 * nrow(X)) +  lambda * (  alpha * sum(abs(beta[-1])) + ((1 - alpha)/2) * crossprod(beta[-1])  )
+  sum(  w * (z - X %*% beta)^2  ) / (2 * nrow(X)) +
+    lambda * (  alpha * sum(abs(beta[-1])) + ((1 - alpha)/2) * crossprod(beta[-1])  )
 }
 
 iter = 20
@@ -200,3 +237,10 @@ beta_hat[iter,]
 ### Bootstrap
 
 A
+
+
+### Lidando com outliers
+
+```{r}
+set.seed(12345); x = rnorm(20); e = rt(20, 1); y = 2*x + e; plot(y~x); lm(y~0+x)
+```

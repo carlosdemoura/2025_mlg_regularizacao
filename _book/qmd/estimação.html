@@ -245,6 +245,7 @@ window.Quarto = {
   <li><a href="#estudo-com-dados-simulados" id="toc-estudo-com-dados-simulados" class="nav-link" data-scroll-target="#estudo-com-dados-simulados"><span class="header-section-number">2.4</span> Estudo com dados simulados</a>
   <ul class="collapse">
   <li><a href="#bootstrap" id="toc-bootstrap" class="nav-link" data-scroll-target="#bootstrap"><span class="header-section-number">2.4.1</span> Bootstrap</a></li>
+  <li><a href="#lidando-com-outliers" id="toc-lidando-com-outliers" class="nav-link" data-scroll-target="#lidando-com-outliers"><span class="header-section-number">2.4.2</span> Lidando com outliers</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -276,7 +277,26 @@ window.Quarto = {
 </div>
 <section id="regularização-como-uma-função-de-perda" class="level2" data-number="2.1">
 <h2 data-number="2.1" class="anchored" data-anchor-id="regularização-como-uma-função-de-perda"><span class="header-section-number">2.1</span> Regularização como uma função de perda</h2>
-<p>Até agora vimos exemplos de como a regularização pode ser vista como uma função de perda na estimação de mínimos quadrados. Essa ideia pode ser estendida para a estimação via máxima verossimilhança (como veremos adiante). Antes disso, mostraremos um exemplo de como a regressão ridge e lasso diminuem os coeficiente na prática.</p>
+<p>Até agora vimos exemplos de como a regularização pode ser vista como uma função de perda na estimação de mínimos quadrados. Essa ideia pode ser estendida para a estimação via máxima verossimilhança (como veremos adiante). Antes disso, mostraremos um exemplo (retirado de <span class="citation" data-cites="islr">James, Witten, Hastie, &amp; Tibshirani (<a href="referências.html#ref-islr" role="doc-biblioref">2021</a>)</span>) de como a regressão ridge e lasso diminuem os coeficiente na prática.</p>
+<p>Considere o caso em que <span class="math inline">\(n = p\)</span>, <span class="math inline">\(X = I_n\)</span>, e não temos intercepto. Assim <span class="math inline">\(\hat\beta_{OLS} = Y\)</span>. Nesse caso, é possível mostrar que</p>
+<p><span class="math display">\[
+\hat\beta_j^{ridge} = \frac{Y_j}{1 + \lambda}
+\]</span> e</p>
+<p><span class="math display">\[
+\hat\beta_j^{lasso} =
+\begin{cases}
+Y_j - \lambda/2, &amp; \text{se } Y_j &gt; \lambda/2;\\
+Y_j + \lambda/2, &amp; \text{se } Y_j &lt; - \lambda/2;\\
+0, &amp; \text{se } -\lambda/2 \leq Y_j \leq \lambda/2.
+\end{cases}
+\]</span></p>
+<p>Com esse exemplo simples, podemos entender porque a regressão ridge nunca iguala os coeficientes a zero, coisa que a lasso pode fazer. Essa característica de zerar coeficientes a depender do valor que os dados assumem é conhecido como <em>soft-tresholding</em> (limiar suave). De acordo com <span class="citation" data-cites="en">Zou &amp; Hastie (<a href="referências.html#ref-en" role="doc-biblioref">2005</a>)</span>, a elastic net mistura tanto a shinkage da regressão ridge quanto o soft tresholding da lasso.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="https://www.statlearning.com/"><img src="../img/islr_soft-tresholding.png" class="img-fluid figure-img" style="width:90.0%"></a></p>
+<figcaption>Gráfico das condições acima.</figcaption>
+</figure>
+</div>
 </section>
 <section id="regularização-como-uma-restrição-do-espaço-paramétrico" class="level2" data-number="2.2">
 <h2 data-number="2.2" class="anchored" data-anchor-id="regularização-como-uma-restrição-do-espaço-paramétrico"><span class="header-section-number">2.2</span> Regularização como uma restrição do espaço paramétrico</h2>
@@ -343,8 +363,8 @@ window.Quarto = {
 <h2 data-number="2.3" class="anchored" data-anchor-id="regularização-nos-mlgs"><span class="header-section-number">2.3</span> Regularização nos MLGs</h2>
 <p>O modelo linear normal pode ser especificado diretamente por meio de seus resíduos, mas - em geral - isso não é possível em todos os MLGs. Aqui, apresentaremos a técnica descrita em <span class="citation" data-cites="en_glm">Tay, Narasimhan, &amp; Hastie (<a href="referências.html#ref-en_glm" role="doc-biblioref">2023</a>)</span>, que generaliza a regularização elastic net para os MLGs. Grosso modo, em vez de minimizar a SQRes penalizada (que nem sempre está bem definida), vamos minimizar o inverso aditivo da log-verossimilhança penalizada (que sempre está bem definida num MLG).</p>
 <p><span class="math display">\[
-(\hat{\beta}_0, \hat{\beta})
-= \arg\min_{\beta_0,\beta}
+\hat{\beta}
+= \arg\min_{\beta}
 \left\{
   -\frac{1}{n}\sum_{i=1}^n \text{loglik}\left(y_i, X \beta \right) + P_{\alpha, \lambda}(\beta)
 \right\},
@@ -368,7 +388,7 @@ P_{\alpha, \lambda}(\beta) =
 <p>Inicialize o algritmo de maneira razoável - com <span class="math inline">\(\hat\beta^{(0)} = 0\)</span>, ou <span class="math inline">\(\eta^{(0)} = Y\)</span>, ou qualquer coisa que faça sentido. Doravante para <span class="math inline">\(t = 1, 2, \dots\)</span> (até que se atinja convergência) faça:</p>
 <ol type="1">
 <li><p>Compute <span class="math inline">\(\eta_i^{(t)} = X\hat{\beta}^{(t)}\)</span> e também <span class="math inline">\(\ \mu_i^{(t)} = g^{-1}(\eta_i^{(t)})\)</span>, para <span class="math inline">\(i \in 1:n\)</span>;</p></li>
-<li><p>Compute <span class="math inline">\(z_i^{(t)} = \eta_i^{(t)} + (y_i - \mu_i^{(t)}) \left( \frac{d\mu_i^{(t)}}{d\eta_i^{(t)}} \right)\)</span> e também <span class="math inline">\(w_i^{(t)} = \frac{1}{V(\mu_i^{(t)})} \left( \frac{d\mu_i^{(t)}}{d\eta_i^{(t)}} \right)^2\)</span>, para <span class="math inline">\(i \in 1:n\)</span>;</p></li>
+<li><p>Compute <span class="math inline">\(z_i^{(t)} = \eta_i^{(t)} + (y_i - \mu_i^{(t)}) \left( \frac{d\mu_i^{(t)}}{d\eta_i^{(t)}} \right)^{-1}\)</span> e também <span class="math inline">\(w_i^{(t)} = \frac{1}{V(\mu_i^{(t)})} \left( \frac{d\mu_i^{(t)}}{d\eta_i^{(t)}} \right)^2\)</span>, para <span class="math inline">\(i \in 1:n\)</span>;</p></li>
 <li><p>Resolva</p></li>
 </ol>
 <p><span class="math display">\[
@@ -378,18 +398,169 @@ P_{\alpha, \lambda}(\beta) =
 \left\{
 \frac{1}{2n}
 \sum_{i=1}^n w_i^{(t)}
-\bigl( z_i^{(t)} - X \beta \bigr)^2
+\bigl( z_i^{(t)} - X_i \beta \bigr)^2
 + P_{\alpha, \lambda}(\beta)
-\right\}
+\right\}.
 \]</span></p>
 </div>
 </div>
 </section>
 <section id="estudo-com-dados-simulados" class="level2" data-number="2.4">
 <h2 data-number="2.4" class="anchored" data-anchor-id="estudo-com-dados-simulados"><span class="header-section-number">2.4</span> Estudo com dados simulados</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">=</span> <span class="dv">100</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">0</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">=</span> <span class="fu">matrix</span>(<span class="dv">1</span>, <span class="at">nrow =</span> n, <span class="at">ncol =</span> <span class="dv">4</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>X[,<span class="dv">2</span>] <span class="ot">=</span> <span class="fu">rnorm</span>(n)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>X[,<span class="dv">3</span>] <span class="ot">=</span> <span class="dv">2</span> <span class="sc">*</span> X[,<span class="dv">2</span>] <span class="sc">+</span> <span class="fu">rnorm</span>(n)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>X[,<span class="dv">4</span>] <span class="ot">=</span> <span class="fu">rnorm</span>(n)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>mu <span class="ot">=</span> <span class="fu">exp</span>(X <span class="sc">%*%</span> beta)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">=</span> <span class="fu">rpois</span>(n, mu)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>df <span class="ot">=</span> </span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(Y,X[,<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>]) <span class="sc">|&gt;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">colnames&lt;-</span><span class="st">`</span>(<span class="fu">c</span>(<span class="st">"ataques"</span>, <span class="st">"temperatura"</span>, <span class="st">"sorvete"</span>, <span class="st">"bobagem"</span>))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>mod <span class="ot">=</span> <span class="fu">glm</span>(ataques<span class="sc">~</span>temperatura<span class="sc">+</span>sorvete<span class="sc">+</span>bobagem, <span class="at">family=</span><span class="fu">poisson</span>(<span class="at">link =</span> <span class="st">"log"</span>), <span class="at">data =</span> df)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = ataques ~ temperatura + sorvete + bobagem, family = poisson(link = "log"), 
+    data = df)
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  1.03466    0.05866  17.638   &lt;2e-16 ***
+temperatura  1.90265    0.05846  32.545   &lt;2e-16 ***
+sorvete      0.04159    0.02118   1.964   0.0496 *  
+bobagem      0.01286    0.01634   0.787   0.4313    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 7749.835  on 99  degrees of freedom
+Residual deviance:   94.349  on 96  degrees of freedom
+AIC: 431.4
+
+Number of Fisher Scoring iterations: 4</code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Nota
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Apenas para ver o efeito que um tamanho de amostra menor teria.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glm</span>(ataques<span class="sc">~</span>temperatura<span class="sc">+</span>sorvete<span class="sc">+</span>bobagem, <span class="at">family=</span><span class="fu">poisson</span>(<span class="at">link =</span> <span class="st">"log"</span>), <span class="at">data =</span> df[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>,]) <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summary</span>()</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = ataques ~ temperatura + sorvete + bobagem, family = poisson(link = "log"), 
+    data = df[1:20, ])
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  0.94735    0.15913   5.953 2.63e-09 ***
+temperatura  1.84569    0.12416  14.866  &lt; 2e-16 ***
+sorvete      0.11211    0.06978   1.607    0.108    
+bobagem      0.03987    0.08303   0.480    0.631    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 438.897  on 19  degrees of freedom
+Residual deviance:  23.168  on 16  degrees of freedom
+AIC: 88.601
+
+Number of Fisher Scoring iterations: 5</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Dica
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Em modelos com função de ligação canônica, o algoritmo acima simplica. O segundo passo da iteração fica: Compute <span class="math inline">\(z_i^{(t)} = \eta_i^{(t)} + \frac{(y_i - \mu_i^{(t)})}{V(\mu_i^{})}\)</span> e também <span class="math inline">\(w_i^{(t)} = V(\mu_i^{(t)})\)</span>, para <span class="math inline">\(i \in 1:n\)</span>;</p>
+</div>
+</div>
+<p>Sabemos que no caso da Poisson, a função de ligação canônica é o log e a função de variância é <span class="math inline">\(\mu_i\)</span>. Assim, nosso algoritmo IRLS-EN fica da seguinte forma.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>sqres_en <span class="ot">=</span> <span class="cf">function</span>(beta, w, z) {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(  w <span class="sc">*</span> (z <span class="sc">-</span> X <span class="sc">%*%</span> beta)<span class="sc">^</span><span class="dv">2</span>  ) <span class="sc">/</span> (<span class="dv">2</span> <span class="sc">*</span> <span class="fu">nrow</span>(X)) <span class="sc">+</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    lambda <span class="sc">*</span> (  alpha <span class="sc">*</span> <span class="fu">sum</span>(<span class="fu">abs</span>(beta[<span class="sc">-</span><span class="dv">1</span>])) <span class="sc">+</span> ((<span class="dv">1</span> <span class="sc">-</span> alpha)<span class="sc">/</span><span class="dv">2</span>) <span class="sc">*</span> <span class="fu">crossprod</span>(beta[<span class="sc">-</span><span class="dv">1</span>])  )</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>iter <span class="ot">=</span> <span class="dv">20</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>alpha <span class="ot">=</span> .<span class="dv">5</span>; lambda <span class="ot">=</span> <span class="dv">2</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>beta_hat <span class="ot">=</span> <span class="fu">matrix</span>(<span class="dv">1</span>, <span class="at">nrow =</span> iter, <span class="at">ncol =</span> <span class="dv">4</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (t <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>iter) {</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  eta <span class="ot">=</span> X <span class="sc">%*%</span> beta_hat[t<span class="dv">-1</span>,]</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  mu <span class="ot">=</span> <span class="fu">exp</span>(eta)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  z <span class="ot">=</span> eta <span class="sc">+</span> (Y <span class="sc">-</span> mu)<span class="sc">/</span>mu</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  beta_hat[t,] <span class="ot">=</span> </span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">optim</span>(</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="fu">ncol</span>(X)),</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">fn     =</span> sqres_en,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">w      =</span> mu,</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">z      =</span> z,</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>par</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>beta_hat[iter,]</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1.3955786928 1.3117519002 0.2194140504 0.0004518438</code></pre>
+</div>
+</div>
 <section id="bootstrap" class="level3" data-number="2.4.1">
 <h3 data-number="2.4.1" class="anchored" data-anchor-id="bootstrap"><span class="header-section-number">2.4.1</span> Bootstrap</h3>
 <p>A</p>
+</section>
+<section id="lidando-com-outliers" class="level3" data-number="2.4.2">
+<h3 data-number="2.4.2" class="anchored" data-anchor-id="lidando-com-outliers"><span class="header-section-number">2.4.2</span> Lidando com outliers</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>); x <span class="ot">=</span> <span class="fu">rnorm</span>(<span class="dv">20</span>); e <span class="ot">=</span> <span class="fu">rt</span>(<span class="dv">20</span>, <span class="dv">1</span>); y <span class="ot">=</span> <span class="dv">2</span><span class="sc">*</span>x <span class="sc">+</span> e; <span class="fu">plot</span>(y<span class="sc">~</span>x); <span class="fu">lm</span>(y<span class="sc">~</span><span class="dv">0</span><span class="sc">+</span>x)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="estimação_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = y ~ 0 + x)
+
+Coefficients:
+    x  
+6.136  </code></pre>
+</div>
+</div>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list" style="display: none">
