@@ -8,7 +8,7 @@ Um jornal de ontem"<br>
 Tom Zé
 :::
 
-## Regularização como uma função de perda
+## Regularização como um limiar suave
 
 Até agora vimos exemplos de como a regularização pode ser vista como uma função de perda na estimação de mínimos quadrados. Essa ideia pode ser estendida para a estimação via máxima verossimilhança (como veremos adiante).
 Antes disso, mostraremos um exemplo (retirado de @islr) de como a regressão ridge e lasso diminuem os coeficiente na prática.
@@ -95,7 +95,6 @@ desenhar_espaço_paramétrico = function(alpha, t, título = NULL) {
           )
 }
 
-
 par(mfrow = c(1,3))
 desenhar_espaço_paramétrico(1,   1, "ridge")
 desenhar_espaço_paramétrico(0,   1, "lasso")
@@ -125,7 +124,7 @@ $$
 Com isso, temos um algoritmo de mínimos quadrados ponderados (IRLS) dado a seguir.
 
 ::: {.callout-tip}
-## IRLS elastic net
+## IRLS elastic net (simplificado)
 
 Selecione um valor de $\alpha \in [0,1]$ e valor de $\lambda \in \mathbb R$.
 
@@ -151,6 +150,8 @@ $$
 + P_{\alpha, \lambda}(\beta)
 \right\}.
 $$
+
+O algoritmo de @en_glm (que aqui simplificamos) faz uma validação cruzada para estimar o melhor $\lambda$. Isso é feito considerando um "caminho de lambdas" (_regularization path_) e otimizando o algoritmo acima com warm-starts, o que será tratado na próxima seção.
 :::
 
 
@@ -168,31 +169,39 @@ $$
 #| warning: false
 
 set.seed(12345)
-n = 100
-beta = c(1, 2, 0, 0)
-X = matrix(1, nrow = n, ncol = 4)
-X[,2] = rnorm(n)
-X[,3] = 2 * X[,2] + rnorm(n)
-X[,4] = rnorm(n)
-mu = exp(X %*% beta)
-Y = rpois(n, mu)
 
-df = 
-  cbind(Y,X[,2:4]) |>
+n = 200
+bloco = 10
+
+X1 = matrix(rnorm(n*bloco*2), ncol = bloco*2)
+beta1 = c( runif(bloco,-0.7,0.7), rep(0,bloco) )
+
+sigma =
+  matrix(.9, nrow = bloco, ncol = bloco) |>
+  `diag<-`(1)
+X2 = mvtnorm::rmvnorm(n, sigma = sigma)  # covariáveis com alta dependência, mas só a primeira é significativa
+beta2 = c(0.6, rep(0,bloco-1))
+
+X = cbind(1,X1,X2)
+beta = c(0.1,beta1,beta2)
+eta = exp(X %*% beta)
+
+index_outliers = sample(1:n, 5)
+eta[index_outliers] = eta[index_outliers] * 3
+
+Y = rpois(n, eta)
+
+df =
+  cbind(Y, X[,-1]) |>
   tibble::as_tibble() |>
-  `colnames<-`(c("ataques", "temperatura", "sorvete", "bobagem"))
+  `colnames<-`(c("Y", paste0("X", 1:(3*bloco))))
 ```
 
-```{r}
-mod = glm(ataques~temperatura+sorvete+bobagem, family=poisson(link = "log"), data = df)
-summary(mod)
-```
 ::: {.callout-note collapse="true"}
-Apenas para ver o efeito que um tamanho de amostra menor teria.
-
+## Resultado do `stats::glm`
 ```{r}
-glm(ataques~temperatura+sorvete+bobagem, family=poisson(link = "log"), data = df[1:20,]) |>
-  summary()
+mod = glm(Y~., data = df, family = poisson())
+summary(mod)
 ```
 :::
 
@@ -201,10 +210,31 @@ Em modelos com função de ligação canônica, o algoritmo acima simplica. O se
 Compute $z_i^{(t)} = \eta_i^{(t)} + \frac{(y_i - \mu_i^{(t)})}{V(\mu_i^{})}$
 e também
 $w_i^{(t)} = V(\mu_i^{(t)})$,
-para $i \in 1:n$;
+para $i \in 1:n$.
 :::
 
 Sabemos que no caso da Poisson, a função de ligação canônica é o log e a função de variância é $\mu_i$. Assim, nosso algoritmo IRLS-EN fica da seguinte forma.
+
+
+::: {.callout-warning collapse="true"}
+
+## Uma pequena trapaça
+
+Como dito acima, a estimação elastic net depende de uma boa escolha dos parâmetros de regularização, especialmente $\lambda$. Como isso é feita via validação cruzada - assunto da próxima seção - demos uma trapaceada didática ao escolher o melhor $\lambda$ usando o `glmnet`, pacote que falaremos mais à frente.
+
+```{r}
+cv = glmnet::cv.glmnet(
+  X[,-1], Y,
+  family = "poisson",
+  intercept = TRUE,
+  alpha = 0.9,
+  nfolds = 10
+)
+
+cv$lambda.1se
+```
+:::
+
 
 ```{r}
 sqres_en = function(beta, w, z) {
@@ -213,8 +243,8 @@ sqres_en = function(beta, w, z) {
 }
 
 iter = 20
-alpha = .5; lambda = 2
-beta_hat = matrix(1, nrow = iter, ncol = 4)
+alpha = 0.9; lambda = cv$lambda.1se
+beta_hat = matrix(1, nrow = iter, ncol = 3*bloco+1)
 
 for (t in 2:iter) {
   eta = X %*% beta_hat[t-1,]
@@ -229,18 +259,257 @@ for (t in 2:iter) {
       method = "BFGS"
     )$par
 }
-
-beta_hat[iter,]
 ```
 
+```{r}
+#| code-fold: true
+estimativas = 
+  cbind(  0:(3*bloco),  beta_hat[iter,],  beta,  unname(mod$coefficients)  ) |>
+  tibble::as_tibble() |>
+  `colnames<-`(c("index", "estimativa en", "real", "estimativa glm"))
+
+estimativas[0:10+1,] |>
+  knitr::kable(digits = 3,
+    caption = "Estimativas vs. beta real\n(originalmente significativos)")
+```
+
+```{r}
+#| code-fold: true
+estimativas[11:20+1,] |>
+  knitr::kable(digits = 3,
+    caption = "Estimativas vs. real\n(originalmente NÃO significativos)")
+```
+
+```{r}
+#| code-fold: true
+estimativas[21:30+1,] |>
+  knitr::kable(digits = 3,
+    caption = "Estimativas vs. real\n(originalmente só o 1º significativo e com covariáveis correlacionadas)")
+```
+
+::: {.callout-important collapse="true"}
+
+## Lidando com outliers
+
+```{r}
+#| code-fold: true
+
+mod_sem_outliers = glm(Y~., data = df[-index_outliers,], family = poisson())
+# summary(mod_sem_outliers)
+col = 11
+
+x_seq = seq(min(X[,col+1]), max(X[,col+1]), length.out = 200)
+y_hat_sem_outlier = exp(summary(mod_sem_outliers)$coef[1] + summary(mod_sem_outliers)$coef[col+1] * x_seq)
+y_hat_com_outlier = exp(summary(mod)$coef[1] + summary(mod)$coef[col+1] * x_seq)
+
+par(mfrow = c(1,1))
+plot(Y~X[,col+1],
+     #ylim = c(0,10),
+     main = "predição com outliers vs. sem outliers",
+     xlab = paste("X", col + 1),
+     ylab = "Y"
+     )
+points(
+  X[index_outliers,col+1],
+  Y[index_outliers],
+  col = "red",
+  pch = 4,
+  cex = 1.5,
+  lwd = 2
+)
+lines(x_seq, y_hat_sem_outlier, col = "blue", lwd = 2)
+lines(x_seq, y_hat_com_outlier, col = "red",  lwd = 2)
+```
+
+
+Pra ver depois.
+
+```{r}
+set.seed(12345)
+x = rnorm(20)
+e = rt(20, 1)
+y = 2*x + e
+plot(y~x)
+#lm(y~0+x) |> summary()
+```
+
+:::
+
+
+Comentários !!!
 
 ### Bootstrap
 
-A
-
-
-### Lidando com outliers
+Why !!!
 
 ```{r}
-set.seed(12345); x = rnorm(20); e = rt(20, 1); y = 2*x + e; plot(y~x); lm(y~0+x)
+set.seed(12345)
+
+iter = 400
+n = 200
+bloco = 10
+
+beta1 = c( runif(bloco,-0.7,0.7), rep(0,bloco) )
+beta2 = c(0.6, rep(0,bloco-1))
+beta = c(0.1,beta1,beta2)
+
+estimativas = array(dim = c(2,length(beta),iter), dimnames = list(c("glm", "en")))
+
+sigma =
+  matrix(.9, nrow = bloco, ncol = bloco) |>
+  `diag<-`(1)
+X1 = matrix(rnorm(n*bloco*2), ncol = bloco*2)
+X2 = mvtnorm::rmvnorm(n, sigma = sigma)
+X = cbind(1,X1,X2)
+eta = exp(X %*% beta)
+
+for (i in 1:iter) {
+  # X1 = matrix(rnorm(n*bloco*2), ncol = bloco*2)
+  # X2 = mvtnorm::rmvnorm(n, sigma = sigma)
+  # X = cbind(1,X1,X2)
+  # eta = exp(X %*% beta)
+  Y = rpois(n, eta)
+  
+  df =
+    cbind(Y, X[,-1]) |>
+    tibble::as_tibble() |>
+    `colnames<-`(c("Y", paste0("X", 1:(3*bloco))))
+  
+  coef_en =
+    glmnet::cv.glmnet(
+      X[,-1], Y,
+      family = "poisson",
+      intercept = TRUE,
+      alpha = 0.9,
+      nfolds = 10
+    ) |>
+    coef(s = "lambda.1se") |>
+    as.matrix() |>
+    `dimnames<-`(NULL) |>
+    c()
+  
+  coef_glm = 
+    glm(Y~., data = df, family = poisson())$coef |>
+    unname()
+  
+  estimativas["en",,i]  = coef_en
+  estimativas["glm",,i] = coef_glm
+}
 ```
+
+```{r}
+#| code-fold: true
+#| fig-cap: "Variâncias dos betas do grupo 1 (significativos)"
+
+plot_hist_block = function(idxs, xlims) {
+  par(mfrow = c(2, 3))
+  for (metodo in c("glm", "en")) {
+    for (i in seq_along(idxs)) {
+      beta_idx = idxs[i]
+      beta_number = beta_idx - 1   # como pedido
+      
+      hist(
+        estimativas[metodo, beta_idx, ],
+        main = paste0(metodo, " - β", beta_number),
+        xlab = "", ylab = "",
+        xlim = xlims[[i]]
+      )
+    }
+    
+  }
+}
+
+plot_hist_block(
+  idxs = c(1, 4, 11),
+  xlims = list(c(-0.2, 0.5), c(0.1, 0.5), c(0.5, 0.9))
+)
+```
+
+```{r}
+#| code-fold: true
+#| fig-cap: "Variâncias dos betas do grupo 2 (não significativos)"
+
+plot_hist_block(
+  idxs = c(12, 14, 19),
+  xlims = list(c(-0.2, 0.2), c(-0.2, 0.2), c(-0.2, 0.2))
+)
+```
+
+```{r}
+#| code-fold: true
+#| fig-cap: "Variâncias dos betas do grupo 3 (covariáveis autocorrelacionadas)"
+
+plot_hist_block(
+  idxs = c(22, 23, 27),
+  xlims = list(c(0, 1.2), c(-0.5, 0.5), c(-0.5, 0.5))
+)
+```
+
+```{r}
+#| warning: false
+#| message: false
+#| fig-width:  10
+#| fig-height: 5
+#| code-fold: true
+
+variancias =
+  apply(estimativas, c(1,2), var) |>
+  t() |>
+  tibble::as_tibble() |>
+  cbind(c("intercepto", rep(c(1,2,3), each=10))) |>
+  tibble::as_tibble() |>
+  `colnames<-`(c("glm", "en", "grupo"))
+
+library(ggplot2)
+
+variancias_long =
+  variancias[-1,] |>
+  tidyr::pivot_longer(
+    cols = c("glm", "en"),
+    names_to = "metodo",
+    values_to = "variancia")
+
+ggplot(variancias_long,
+       aes(x = grupo, y = variancia, fill = metodo)) +
+  geom_boxplot(alpha = 0.7) +
+  labs(x = "Grupo", y = "Variância",
+       title = "Variância dos Betas por Grupo e Método") +
+  theme_minimal(base_size = 14)
+```
+
+
+Comentários !!!
+
+Viés? !!!
+
+```{r}
+#| warning: false
+#| message: false
+#| fig-width:  10
+#| fig-height: 5
+#| code-fold: true
+
+vies2 =
+  sweep(estimativas, 2, beta, FUN = "-")^2 |>
+  apply(c(1,2), mean) |>
+  t() |>
+  tibble::as_tibble() |>
+  cbind(c("intercepto", rep(c(1,2,3), each=10))) |>
+  tibble::as_tibble() |>
+  `colnames<-`(c("glm", "en", "grupo"))
+
+vies2_long =
+  vies2[-1,] |>
+  tidyr::pivot_longer(
+    cols = c("glm", "en"),
+    names_to = "metodo",
+    values_to = "vies2")
+
+ggplot(vies2_long,
+       aes(x = grupo, y = vies2, fill = metodo)) +
+  geom_boxplot(alpha = 0.7) +
+  labs(x = "Grupo", y = "Viés²",
+       title = "Viés² dos Betas por Grupo e Método") +
+  theme_minimal(base_size = 14)
+```
+

@@ -2,7 +2,7 @@
 
 [![Alice in Wonderland](../img/alice-shrinking.gif){width=50%}](https://tenor.com/view/alice-shrinking-drink-me-alice-in-wonderland-wonderland-gif-19278503)
 
-Validação cruzada
+## Validação cruzada
 
 ```{r}
 1

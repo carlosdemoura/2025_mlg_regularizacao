@@ -25,7 +25,7 @@ Alguns pacotes que usaremos estão abaixo listados.
 #| eval: false
 if (!{"pak" %in% rownames(installed.packages())}) install.packages("pak")
 
-pak::pak(c("matrixcalc", "glmnet", "tidyverse"))
+pak::pak(c("matrixcalc", "glmnet", "tidyverse", "mvtnorm", "ggplot2"))
 ```
 
 
