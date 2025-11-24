@@ -4,10 +4,99 @@
 
 ## Validação cruzada
 
+Como já vimos anteriormente, a seleção dos parâmetros de regularização é um passo importante na regularização. Não deve ser surpresa para o leitor mais atento que isso será feito por validação cruzada.
+Uma vez que já apresentamos os principais passos do IRLS-EN, doravante usaremos o pacote `glmnet` (@glmnet), que foi desenvolvido - dentre outros - pelas mesmas mentes por trás da regressão lasso e elastic net, como Tibshirani e Hastie. O pacote conta com diversas rotinas para a implementação da regularização em muitas famílias comuns de MLG (normal, binomial, poisson, ...).
+
+::: {.callout-tip}
+# Outros pacotes
+
+Outros pacotes podem ser usados para ajustar regularizações em GLMs, cada um com suas particularidades. O `glmnet`, por exemplo, é um dos poucos pacotes que permitem a implementação em qualquer família de GLMs, mas o pacote não é compatível com a sintaxe de fórmulas do R. Uma série de alternativas ao `glmnet` são apresentadas em @en_glm.
+:::
+
+Considere a penalidade do elastic net
+
+$$
+P_{\alpha, \lambda}(\beta) = 
+\lambda \left( \frac{1 - \alpha}{2}  \sum_{j=1}^p \beta_j^2 + \alpha\sum_{j=1}^p |\beta_j| \right).
+$$
+
+Para diferentes escolhas de $\alpha \in [0,1]$, serão gerados diferentes penalidades, todas potencialmente razoáveis. Como essas regras podem ser vistas como restrições do espaço paramétrico, a força dessa restrição será dada por $\lambda$. 
+
+
+
+
+
+
+
+
+
+
+### Selecionando $\lambda$
+
+Fixado um $\alpha$, a seleção de $\lambda$ feita pelo `glmnet` @en_glm
+
+Lambda pode ser selecionado como aquele que dá um modelo com tantas covariáveis.
+
 ```{r}
-1
+fit = glmnet(x, y)
+plot(fit)
 ```
 
-## Warm start
 
-@en_glm
+```{r}
+cvfit = cv.glmnet(x, y)
+plot(cvfit)
+```
+
+O EQM é calculado usado o K-fold cross-validation - mais sobre isso pode ser visto no capítulo 10 de @tmwr. Grosso modo, os dados são divididos em $K$ subconjuntos de igual tamanho (default $K = 10$) e para cada $\lambda$ no caminho de lambdas e $k' \in 1:K$ faça:
+
+1. Ajuste o modelo com os $K-1$ outros subconjuntos;
+2. Preveja o os valores do subconjunto $k'$ a partir dos coeficientes obtidos;
+3. Calcule o EQM nesse subconkunto que ficou de fora.
+
+O EQM de $\lambda'$ será a média do EQM dos $K$ subconjuntos.
+
+As linhas verticais pontilhadas trazem valores especiais de $\lambda$. `lambda.min` é o valor de $\lambda$ que dá o modelo com menor EQM. Com isso, o programa calcula `lambda.1se`, o $\lambda$ que está um desvio padrão acima de `lambda.min`. Isso permite que o modelo cresça ao máximo as estimativas dos betas sem crescer muito o MSE.
+
+```{r}
+cvfit$lambda.min
+cvfit$lambda.1se
+```
+
+A predição de novos valores é feita por meio da função `predict`
+
+```{r}
+predict(cvfit, newx = x[1:5,], s = "lambda.min")
+```
+
+
+
+```{r}
+set.seed(12345)
+
+n = 200
+bloco = 10
+
+X1 = matrix(rnorm(n*bloco*2), ncol = bloco*2)
+beta1 = c( runif(bloco,-0.7,0.7), rep(0,bloco) )
+
+sigma =
+  matrix(.9, nrow = bloco, ncol = bloco) |>
+  `diag<-`(1)
+X2 = mvtnorm::rmvnorm(n, sigma = sigma)
+beta2 = c(0.6, rep(0,bloco-1))
+
+X = cbind(1,X1,X2)
+beta = c(0.1,beta1,beta2)
+eta = exp(X %*% beta)
+Y = rpois(n, eta)
+```
+
+::: {.callout-tip}
+# sparse matrices
+
+sparse matrix format
+:::
+
+
+### Selação do alpha 
