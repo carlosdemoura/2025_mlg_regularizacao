@@ -340,7 +340,12 @@ Comentários !!!
 
 ### Bootstrap
 
-Why !!!
+Como um exemplo computaciona, optamos por fazer um bootstrap paramétrico a fim de entender o comportamento dos estimadores tradicional (IRLS via `glm`) e regularizado (IRLS-EN adaptado de @en_glm).
+Opatamos por manter a mesma configuração de blocos e parâmetros descrita anteriormente. Poderiamos ter considerando a aleatoriedade das covariáveis no processo (dentro das especificações anteriores) - o que pode ser feito simplesmente passando o sorteio dos xizes para dentro do loop -, mas vimos que isso produziu um resultado similar ao com $X$ fixado (só um pouco menos dramático).
+
+Seria interessante também fazer um estudo Monte Carlo, sorteando diferentes betas dentro da mesma estrutura e diferentes xizes para cada iteração Monte Carlo. Convidamos o leitor a fazer isso em seu tempo livre.
+
+Por fim, vale ressaltar que o bootstrap se faz necessário pois não sabemos qual é a distribuição analítica nem dos betas estimados via IRLS nem dos estimados via IRLS-EN.
 
 ```{r}
 set.seed(12345)
@@ -364,16 +369,7 @@ X = cbind(1,X1,X2)
 eta = exp(X %*% beta)
 
 for (i in 1:iter) {
-  # X1 = matrix(rnorm(n*bloco*2), ncol = bloco*2)
-  # X2 = mvtnorm::rmvnorm(n, sigma = sigma)
-  # X = cbind(1,X1,X2)
-  # eta = exp(X %*% beta)
   Y = rpois(n, eta)
-  
-  df =
-    cbind(Y, X[,-1]) |>
-    tibble::as_tibble() |>
-    `colnames<-`(c("Y", paste0("X", 1:(3*bloco))))
   
   coef_en =
     glmnet::cv.glmnet(
@@ -389,7 +385,7 @@ for (i in 1:iter) {
     c()
   
   coef_glm = 
-    glm(Y~., data = df, family = poisson())$coef |>
+    glm(Y~X[,-1], family = poisson())$coef |>
     unname()
   
   estimativas["en",,i]  = coef_en
@@ -445,6 +441,13 @@ plot_hist_block(
 )
 ```
 
+Os histogramas acima vão ao encontro do que a teoria diz. No primeiro bloco de covariáveis (intercepto mais covariáveis de 1 a 10) os betas reais são significativos e ambos os modelos captam isso - com um grau similar de variabilidade.
+
+No segundo bloco de covariáveis, ambos os modelos captam a insignificância real dos betas, mas as estimativas do elastic net têm bem menos variabilidade que aquelas do IRLS tradicional.
+
+No terceiro bloco de covariáveis - alta correlação das covariáveis e apenas o $\beta_{21}$ realmente diferente de zero -, ambos os modelos captam qual é a covariável significativa, mas - pelo menos nas variáveis não siginificativas - as estimativas do elastic net são menos dispersas que as do IRLS tradicional.
+
+
 ```{r}
 #| warning: false
 #| message: false
@@ -477,10 +480,8 @@ ggplot(variancias_long,
   theme_minimal(base_size = 14)
 ```
 
-
-Comentários !!!
-
-Viés? !!!
+Os boxplots acima refletem o que já dissemos. As variabilidade das estimativas EN e tradicional são muito diferentes nos grupos 2 e 3 e razoavelmente similares no grupo 1.
+Nesse plot foi ignorado o intercepto.
 
 ```{r}
 #| warning: false
@@ -513,3 +514,4 @@ ggplot(vies2_long,
   theme_minimal(base_size = 14)
 ```
 
+O gráfico de boxplots acima mostra como os dois modelos se comportam em termos de viés ao quadrado. É possível notar que o viés da estatística EN é mais enviesada que a estatística tradicional no grupo com coeficientes diferentes de zero.
