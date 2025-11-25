@@ -242,7 +242,7 @@ window.Quarto = {
   <li><a href="#validação-cruzada" id="toc-validação-cruzada" class="nav-link active" data-scroll-target="#validação-cruzada"><span class="header-section-number">3.1</span> Validação cruzada</a>
   <ul class="collapse">
   <li><a href="#selecionando-lambda" id="toc-selecionando-lambda" class="nav-link" data-scroll-target="#selecionando-lambda"><span class="header-section-number">3.1.1</span> Selecionando <span class="math inline">\(\lambda\)</span></a></li>
-  <li><a href="#selação-do-alpha" id="toc-selação-do-alpha" class="nav-link" data-scroll-target="#selação-do-alpha"><span class="header-section-number">3.1.2</span> Selação do alpha</a></li>
+  <li><a href="#selecionando-alpha" id="toc-selecionando-alpha" class="nav-link" data-scroll-target="#selecionando-alpha"><span class="header-section-number">3.1.2</span> Selecionando <span class="math inline">\(\alpha\)</span></a></li>
   </ul></li>
   </ul>
 </nav>
@@ -277,7 +277,7 @@ window.Quarto = {
 </div>
 <section id="validação-cruzada" class="level2" data-number="3.1">
 <h2 data-number="3.1" class="anchored" data-anchor-id="validação-cruzada"><span class="header-section-number">3.1</span> Validação cruzada</h2>
-<p>Como já vimos anteriormente, a seleção dos parâmetros de regularização é um passo importante na regularização. Não deve ser surpresa para o leitor mais atento que isso será feito por validação cruzada. Uma vez que já apresentamos os principais passos do IRLS-EN, doravante usaremos o pacote <code>glmnet</code> (<span class="citation" data-cites="glmnet">J. Friedman, Hastie, Tibshirani, et al. (<a href="referências.html#ref-glmnet" role="doc-biblioref">2025</a>)</span>), que foi desenvolvido - dentre outros - pelas mesmas mentes por trás da regressão lasso e elastic net, como Tibshirani e Hastie. O pacote conta com diversas rotinas para a implementação da regularização em muitas famílias comuns de MLG (normal, binomial, poisson, …).</p>
+<p>Como já vimos anteriormente, a seleção dos parâmetros de regularização é um passo importante na regularização. Não deve ser surpresa para o leitor mais atento que isso será feito por validação cruzada. Uma vez que já apresentamos os principais passos do IRLS-EN, doravante usaremos o pacote <code>glmnet</code> (<span class="citation" data-cites="glmnet">J. Friedman, Hastie, Tibshirani, et al. (<a href="referências.html#ref-glmnet" role="doc-biblioref">2025</a>)</span>), que foi desenvolvido - dentre outros - pelas mesmas mentes por trás da regressão lasso e elastic net, como Tibshirani e Hastie. O pacote conta com diversas rotinas para a implementação da regularização em muitas famílias comuns de MLG (normal, binomial, poisson, etc.).</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -400,8 +400,8 @@ fold</code></pre>
 </div>
 </div>
 </section>
-<section id="selação-do-alpha" class="level3" data-number="3.1.2">
-<h3 data-number="3.1.2" class="anchored" data-anchor-id="selação-do-alpha"><span class="header-section-number">3.1.2</span> Selação do alpha</h3>
+<section id="selecionando-alpha" class="level3" data-number="3.1.2">
+<h3 data-number="3.1.2" class="anchored" data-anchor-id="selecionando-alpha"><span class="header-section-number">3.1.2</span> Selecionando <span class="math inline">\(\alpha\)</span></h3>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list" style="display: none">

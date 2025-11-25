@@ -286,17 +286,20 @@ estimativas[21:30+1,] |>
     caption = "Estimativas vs. real\n(originalmente só o 1º significativo e com covariáveis correlacionadas)")
 ```
 
-Comentários !!!
+Nos primeiro grupo (betas reais não nulos e covariáveis independentes), tanto o `glm` quanto o EN recuperam bem tanto os sinais quanto as magnitudes dos betas reais e podemos ver bem a ocorrência da _shrinkage_. Já no segundo bloco (betas reais nulos e covariáveis independentes), a EN se destaca ao manter as estimativas próximas de zero, enquanto o `glm` frequentemente gera pequenos falsos positivos. Finalmente, no terceiro bloco (betas reais não nulos e covariáveis fortemente dependentes), oEN novamente aplica _shrinkage_ forte nos coeficientes irrelevantes, enquanto o `glm` tem maior dificuldade em lidar com a colinearidade.
 
 ::: {.callout-important collapse="true"}
 
 ## Lidando com outliers
 
-Os dados acima foram gerados com uma certa poluição de outlier. Como podemos ver no gráfico abaixo (com outliers marcados com x)
+Os dados acima foram gerados com uma certa poluição de outlier, como podemos ver nos gráficos abaixo.
 
 ```{r}
 #| code-fold: true
 #| fig-cap: "Predição do `glm` com outliers (linha vermelha) vs. sem outliers (linha azul). Outliers inseridos intencionalmente marcados com um x vermelho."
+#| fig-width:  8
+#| fig-height: 4
+#| fig-align: "center"
 
 mod_sem_outliers = glm(Y~., data = df[-index_outliers,], family = poisson())
 # summary(mod_sem_outliers)
@@ -326,11 +329,10 @@ for (limsup in c(160, 10)) {
   lines(x_seq, y_hat_com_outlier, col = "red",  lwd = 2)
 }
 ```
-Quando estimamos usando a função `glm`, a estimativa do coeficiente da covariável `r col+1` no modelo com os outliers é de `r round(summary(mod)$coef[col+1], 3)`, já no modelo sem outliers essa estimativa passa a ser de  `r round(summary(mod_sem_outliers)$coef[col+1], 3)`. Além disso, esse coeficiente (originalmente nulo) tornou-se siginificativo com a inclusão dos outliers.
 
-Comentários !!!
+Quando estimamos usando a função `glm`, a estimativa do coeficiente da covariável `r col+1` no modelo com os outliers é de `r round(summary(mod)$coef[col+1], 3)`, já no modelo sem outliers essa estimativa passa a ser de  `r round(summary(mod_sem_outliers)$coef[col+1], 3)`. Além disso, esse coeficiente (originalmente nulo) tornou-se siginificativo com a inclusão dos outliers. Já na estimação EN, a estimativa pontual é `r round(estimativas[col+1,]$"estimativa en", 3)`, o que é mais razoável que a estimativa do `glm` com outliers (o único que temos acesso). Embora isso não indique se a variável é significativa (segundo a métrica EN), isso produz um modelo mais parcimonioso que o IRLS tradicional
 
-Um exemplo mais interessante sobre o poder da regularização na contenção do efeito de outliers pode ser visto abaixo. 
+Podemos ver abaixo um exemplo mais comovente sobre o poder da regularização na contenção do efeito de outliers. 
 
 ```{r}
 set.seed(12345)
@@ -341,37 +343,37 @@ y = x %*% beta + e
 ```
 
 ```{r}
-#| fig-width:  8
+#| fig-width:  5
 #| fig-height: 4
+#| fig-align: "center"
 plot(y~x[,-1])
 ```
 
 ```{r}
-lm(y~x[,-1]) |> summary()
+#| code-fold: true
 
+sqres_lasso = function(beta, X, Y, lambda) {
+  res = Y - X %*% beta
+  drop(crossprod(res) + lambda * sum(abs(beta)))
+}
+```
+
+```{r}
+lm(y~x[,-1]) |> summary()
+```
+
+```{r}
 boot::boot(
   data = data.frame(y = y, x = x[,-1]),
   statistic = {\(data, indices) lm(y ~ x, data = data[indices, ])$coef},
   R = 200
   )
-
-optim(
-  par    = rep(0,2),
-  fn     = sqres_lasso,
-  X      = x,
-  Y      = y,
-  lambda = 100,
-  method = "BFGS"
-)$par
 ```
-
-É possível notar que o EMQ é fortemente impactado pela presença do outlier, que afeta não só a estimação pontual dos parâmetros como sua significância no modelo.
-Coisa parecida ocorre quando usamos o bootstrap para estimar os coeficientes de regressão.
-Apesar disso, a estimativa da regressão lasso produz estimativas razoáveis.
 
 ```{r}
 #| fig-width:  10
 #| fig-height: 4
+#| code-fold: true
 # Para entender melhor  o que está acontecendo no bootstrap
 
 set.seed(12345)
@@ -387,12 +389,33 @@ for (b in 1:B) {
 par(mfrow = c(1,2))
 hist(coef[,1], main = "estimativas bootstrap - β0")
 abline(v = beta[1], lwd = 3, col = 2)
-hist(coef[,2], xlim = c(0,10), breaks = (-100):100,
+hist(coef[,2], xlim = c(0,20), breaks = (-100):100,
      main = "estimativas bootstrap - β1")
 abline(v = beta[2], lwd = 3, col = 2)
 ```
 
+```{r}
+optim(
+  par    = rep(0,2),
+  fn     = sqres_lasso,
+  X      = x,
+  Y      = y,
+  lambda = 100,
+  method = "BFGS"
+)$par
+```
+
+É possível notar que o EMQ é fortemente impactado pela presença do outlier, que afeta não só a estimação pontual dos parâmetros como sua significância no modelo.
+Coisa parecida ocorre quando usamos o bootstrap para estimar os coeficientes de regressão.
+Apesar disso, a estimativa da regressão lasso produz estimativas razoáveis.
+
 :::
+
+
+
+
+
+
 
 
 
@@ -504,7 +527,6 @@ Os histogramas acima vão ao encontro do que a teoria diz. No primeiro bloco de 
 No segundo bloco de covariáveis, ambos os modelos captam a insignificância real dos betas, mas as estimativas do elastic net têm bem menos variabilidade que aquelas do IRLS tradicional.
 
 No terceiro bloco de covariáveis - alta correlação das covariáveis e apenas o $\beta_{21}$ realmente diferente de zero -, ambos os modelos captam qual é a covariável significativa, mas - pelo menos nas variáveis não siginificativas - as estimativas do elastic net são menos dispersas que as do IRLS tradicional.
-
 
 ```{r}
 #| warning: false
