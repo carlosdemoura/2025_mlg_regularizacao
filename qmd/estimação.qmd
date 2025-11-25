@@ -515,3 +515,33 @@ ggplot(vies2_long,
 ```
 
 O gráfico de boxplots acima mostra como os dois modelos se comportam em termos de viés ao quadrado. É possível notar que o viés da estatística EN é mais enviesada que a estatística tradicional no grupo com coeficientes diferentes de zero.
+
+```{r}
+#| warning: false
+#| message: false
+#| fig-width:  10
+#| fig-height: 5
+#| code-fold: true
+
+norma =
+  apply(estimativas, c(1,2), crossprod) |>
+  t() |>
+  tibble::as_tibble() |>
+  cbind(c("intercepto", rep(c(1,2,3), each=10))) |>
+  tibble::as_tibble() |>
+  `colnames<-`(c("glm", "en", "grupo"))
+
+norma_long =
+  norma[-1,] |>
+  tidyr::pivot_longer(
+    cols = c("glm", "en"),
+    names_to = "metodo",
+    values_to = "norma")
+
+ggplot(norma_long,
+       aes(x = grupo, y = norma, fill = metodo)) +
+  geom_boxplot(alpha = 0.7) +
+  labs(x = "Grupo", y = "Norma L2",
+       title = "Norma dos Betas por Grupo e Método") +
+  theme_minimal(base_size = 14)
+```

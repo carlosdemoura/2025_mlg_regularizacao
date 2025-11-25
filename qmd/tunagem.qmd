@@ -38,6 +38,9 @@ Fixado um $\alpha$, a seleção de $\lambda$ feita pelo `glmnet` @en_glm
 Lambda pode ser selecionado como aquele que dá um modelo com tantas covariáveis.
 
 ```{r}
+library(glmnet)
+x = cbind(1, 1:10)
+y = 1:10+1
 fit = glmnet(x, y)
 plot(fit)
 ```
@@ -66,7 +69,7 @@ cvfit$lambda.1se
 A predição de novos valores é feita por meio da função `predict`
 
 ```{r}
-predict(cvfit, newx = x[1:5,], s = "lambda.min")
+predict(cvfit, newx = cbind(1, 12), s = "lambda.min")
 ```
 
 

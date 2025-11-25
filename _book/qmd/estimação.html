@@ -902,7 +902,9 @@ Dica
 <p>Comentários !!!</p>
 <section id="bootstrap" class="level3" data-number="2.4.1">
 <h3 data-number="2.4.1" class="anchored" data-anchor-id="bootstrap"><span class="header-section-number">2.4.1</span> Bootstrap</h3>
-<p>Why !!!</p>
+<p>Como um exemplo computaciona, optamos por fazer um bootstrap paramétrico a fim de entender o comportamento dos estimadores tradicional (IRLS via <code>glm</code>) e regularizado (IRLS-EN adaptado de <span class="citation" data-cites="en_glm">Tay et al. (<a href="referências.html#ref-en_glm" role="doc-biblioref">2023</a>)</span>). Opatamos por manter a mesma configuração de blocos e parâmetros descrita anteriormente. Poderiamos ter considerando a aleatoriedade das covariáveis no processo (dentro das especificações anteriores) - o que pode ser feito simplesmente passando o sorteio dos xizes para dentro do loop -, mas vimos que isso produziu um resultado similar ao com <span class="math inline">\(X\)</span> fixado (só um pouco menos dramático).</p>
+<p>Seria interessante também fazer um estudo Monte Carlo, sorteando diferentes betas dentro da mesma estrutura e diferentes xizes para cada iteração Monte Carlo. Convidamos o leitor a fazer isso em seu tempo livre.</p>
+<p>Por fim, vale ressaltar que o bootstrap se faz necessário pois não sabemos qual é a distribuição analítica nem dos betas estimados via IRLS nem dos estimados via IRLS-EN.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -925,37 +927,28 @@ Dica
 <span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>eta <span class="ot">=</span> <span class="fu">exp</span>(X <span class="sc">%*%</span> beta)</span>
 <span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>iter) {</span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># X1 = matrix(rnorm(n*bloco*2), ncol = bloco*2)</span></span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># X2 = mvtnorm::rmvnorm(n, sigma = sigma)</span></span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>  <span class="co"># X = cbind(1,X1,X2)</span></span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>  <span class="co"># eta = exp(X %*% beta)</span></span>
-<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">=</span> <span class="fu">rpois</span>(n, eta)</span>
-<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">=</span></span>
-<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cbind</span>(Y, X[,<span class="sc">-</span><span class="dv">1</span>]) <span class="sc">|&gt;</span></span>
-<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>    tibble<span class="sc">::</span><span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
-<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">colnames&lt;-</span><span class="st">`</span>(<span class="fu">c</span>(<span class="st">"Y"</span>, <span class="fu">paste0</span>(<span class="st">"X"</span>, <span class="dv">1</span><span class="sc">:</span>(<span class="dv">3</span><span class="sc">*</span>bloco))))</span>
-<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>  coef_en <span class="ot">=</span></span>
-<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>    glmnet<span class="sc">::</span><span class="fu">cv.glmnet</span>(</span>
-<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>      X[,<span class="sc">-</span><span class="dv">1</span>], Y,</span>
-<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>      <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
-<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>      <span class="at">intercept =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>      <span class="at">alpha =</span> <span class="fl">0.9</span>,</span>
-<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>      <span class="at">nfolds =</span> <span class="dv">10</span></span>
-<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
-<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coef</span>(<span class="at">s =</span> <span class="st">"lambda.1se"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.matrix</span>() <span class="sc">|&gt;</span></span>
-<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">dimnames&lt;-</span><span class="st">`</span>(<span class="cn">NULL</span>) <span class="sc">|&gt;</span></span>
-<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>()</span>
-<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a>  coef_glm <span class="ot">=</span> </span>
-<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a>    <span class="fu">glm</span>(Y<span class="sc">~</span>., <span class="at">data =</span> df, <span class="at">family =</span> <span class="fu">poisson</span>())<span class="sc">$</span>coef <span class="sc">|&gt;</span></span>
-<span id="cb14-48"><a href="#cb14-48" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unname</span>()</span>
-<span id="cb14-49"><a href="#cb14-49" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb14-50"><a href="#cb14-50" aria-hidden="true" tabindex="-1"></a>  estimativas[<span class="st">"en"</span>,,i]  <span class="ot">=</span> coef_en</span>
-<span id="cb14-51"><a href="#cb14-51" aria-hidden="true" tabindex="-1"></a>  estimativas[<span class="st">"glm"</span>,,i] <span class="ot">=</span> coef_glm</span>
-<span id="cb14-52"><a href="#cb14-52" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">=</span> <span class="fu">rpois</span>(n, eta)</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>  coef_en <span class="ot">=</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>    glmnet<span class="sc">::</span><span class="fu">cv.glmnet</span>(</span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>      X[,<span class="sc">-</span><span class="dv">1</span>], Y,</span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">intercept =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">alpha =</span> <span class="fl">0.9</span>,</span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>      <span class="at">nfolds =</span> <span class="dv">10</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coef</span>(<span class="at">s =</span> <span class="st">"lambda.1se"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.matrix</span>() <span class="sc">|&gt;</span></span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">dimnames&lt;-</span><span class="st">`</span>(<span class="cn">NULL</span>) <span class="sc">|&gt;</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>()</span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>  coef_glm <span class="ot">=</span> </span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">glm</span>(Y<span class="sc">~</span>X[,<span class="sc">-</span><span class="dv">1</span>], <span class="at">family =</span> <span class="fu">poisson</span>())<span class="sc">$</span>coef <span class="sc">|&gt;</span></span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unname</span>()</span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>  estimativas[<span class="st">"en"</span>,,i]  <span class="ot">=</span> coef_en</span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>  estimativas[<span class="st">"glm"</span>,,i] <span class="ot">=</span> coef_glm</span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
 <details class="code-fold">
@@ -1026,6 +1019,9 @@ Dica
 </div>
 </div>
 </div>
+<p>Os histogramas acima vão ao encontro do que a teoria diz. No primeiro bloco de covariáveis (intercepto mais covariáveis de 1 a 10) os betas reais são significativos e ambos os modelos captam isso - com um grau similar de variabilidade.</p>
+<p>No segundo bloco de covariáveis, ambos os modelos captam a insignificância real dos betas, mas as estimativas do elastic net têm bem menos variabilidade que aquelas do IRLS tradicional.</p>
+<p>No terceiro bloco de covariáveis - alta correlação das covariáveis e apenas o <span class="math inline">\(\beta_{21}\)</span> realmente diferente de zero -, ambos os modelos captam qual é a covariável significativa, mas - pelo menos nas variáveis não siginificativas - as estimativas do elastic net são menos dispersas que as do IRLS tradicional.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Código</summary>
@@ -1061,8 +1057,7 @@ Dica
 </div>
 </div>
 </div>
-<p>Comentários !!!</p>
-<p>Viés? !!!</p>
+<p>Os boxplots acima refletem o que já dissemos. As variabilidade das estimativas EN e tradicional são muito diferentes nos grupos 2 e 3 e razoavelmente similares no grupo 1. Nesse plot foi ignorado o intercepto.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Código</summary>
@@ -1093,6 +1088,40 @@ Dica
 <div>
 <figure class="figure">
 <p><img src="estimação_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>O gráfico de boxplots acima mostra como os dois modelos se comportam em termos de viés ao quadrado. É possível notar que o viés da estatística EN é mais enviesada que a estatística tradicional no grupo com coeficientes diferentes de zero.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>norma <span class="ot">=</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">apply</span>(estimativas, <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>), crossprod) <span class="sc">|&gt;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t</span>() <span class="sc">|&gt;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(<span class="fu">c</span>(<span class="st">"intercepto"</span>, <span class="fu">rep</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>), <span class="at">each=</span><span class="dv">10</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">colnames&lt;-</span><span class="st">`</span>(<span class="fu">c</span>(<span class="st">"glm"</span>, <span class="st">"en"</span>, <span class="st">"grupo"</span>))</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>norma_long <span class="ot">=</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  norma[<span class="sc">-</span><span class="dv">1</span>,] <span class="sc">|&gt;</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">c</span>(<span class="st">"glm"</span>, <span class="st">"en"</span>),</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"metodo"</span>,</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"norma"</span>)</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(norma_long,</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> grupo, <span class="at">y =</span> norma, <span class="at">fill =</span> metodo)) <span class="sc">+</span></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Grupo"</span>, <span class="at">y =</span> <span class="st">"Norma L2"</span>,</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Norma dos Betas por Grupo e Método"</span>) <span class="sc">+</span></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">14</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="estimação_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="960"></p>
 </figure>
 </div>
 </div>
