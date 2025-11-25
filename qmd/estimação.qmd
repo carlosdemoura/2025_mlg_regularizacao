@@ -215,7 +215,6 @@ para $i \in 1:n$.
 
 Sabemos que no caso da Poisson, a função de ligação canônica é o log e a função de variância é $\mu_i$. Assim, nosso algoritmo IRLS-EN fica da seguinte forma.
 
-
 ::: {.callout-warning collapse="true"}
 
 ## Uma pequena trapaça
@@ -234,7 +233,6 @@ cv = glmnet::cv.glmnet(
 cv$lambda.1se
 ```
 :::
-
 
 ```{r}
 sqres_en = function(beta, w, z) {
@@ -260,6 +258,7 @@ for (t in 2:iter) {
     )$par
 }
 ```
+
 
 ```{r}
 #| code-fold: true
@@ -287,12 +286,17 @@ estimativas[21:30+1,] |>
     caption = "Estimativas vs. real\n(originalmente só o 1º significativo e com covariáveis correlacionadas)")
 ```
 
+Comentários !!!
+
 ::: {.callout-important collapse="true"}
 
 ## Lidando com outliers
 
+Os dados acima foram gerados com uma certa poluição de outlier. Como podemos ver no gráfico abaixo (com outliers marcados com x)
+
 ```{r}
 #| code-fold: true
+#| fig-cap: "Predição do `glm` com outliers (linha vermelha) vs. sem outliers (linha azul). Outliers inseridos intencionalmente marcados com um x vermelho."
 
 mod_sem_outliers = glm(Y~., data = df[-index_outliers,], family = poisson())
 # summary(mod_sem_outliers)
@@ -302,41 +306,95 @@ x_seq = seq(min(X[,col+1]), max(X[,col+1]), length.out = 200)
 y_hat_sem_outlier = exp(summary(mod_sem_outliers)$coef[1] + summary(mod_sem_outliers)$coef[col+1] * x_seq)
 y_hat_com_outlier = exp(summary(mod)$coef[1] + summary(mod)$coef[col+1] * x_seq)
 
-par(mfrow = c(1,1))
-plot(Y~X[,col+1],
-     #ylim = c(0,10),
-     main = "predição com outliers vs. sem outliers",
-     xlab = paste("X", col + 1),
-     ylab = "Y"
-     )
-points(
-  X[index_outliers,col+1],
-  Y[index_outliers],
-  col = "red",
-  pch = 4,
-  cex = 1.5,
-  lwd = 2
-)
-lines(x_seq, y_hat_sem_outlier, col = "blue", lwd = 2)
-lines(x_seq, y_hat_com_outlier, col = "red",  lwd = 2)
+par(mfrow = c(1,2))
+for (limsup in c(160, 10)) {
+  plot(Y~X[,col+1],
+       ylim = c(0,limsup),
+       main = "",
+       xlab = paste("X", col),
+       ylab = "Y"
+       )
+  points(
+    X[index_outliers,col+1],
+    Y[index_outliers],
+    col = "red",
+    pch = 4,
+    cex = 1.5,
+    lwd = 2
+  )
+  lines(x_seq, y_hat_sem_outlier, col = "blue", lwd = 2)
+  lines(x_seq, y_hat_com_outlier, col = "red",  lwd = 2)
+}
 ```
+Quando estimamos usando a função `glm`, a estimativa do coeficiente da covariável `r col+1` no modelo com os outliers é de `r round(summary(mod)$coef[col+1], 3)`, já no modelo sem outliers essa estimativa passa a ser de  `r round(summary(mod_sem_outliers)$coef[col+1], 3)`. Além disso, esse coeficiente (originalmente nulo) tornou-se siginificativo com a inclusão dos outliers.
 
+Comentários !!!
 
-Pra ver depois.
+Um exemplo mais interessante sobre o poder da regularização na contenção do efeito de outliers pode ser visto abaixo. 
 
 ```{r}
 set.seed(12345)
-x = rnorm(20)
+x = cbind(1, rnorm(20))
 e = rt(20, 1)
-y = 2*x + e
-plot(y~x)
-#lm(y~0+x) |> summary()
+beta = c(5, 2)
+y = x %*% beta + e
+```
+
+```{r}
+#| fig-width:  8
+#| fig-height: 4
+plot(y~x[,-1])
+```
+
+```{r}
+lm(y~x[,-1]) |> summary()
+
+boot::boot(
+  data = data.frame(y = y, x = x[,-1]),
+  statistic = {\(data, indices) lm(y ~ x, data = data[indices, ])$coef},
+  R = 200
+  )
+
+optim(
+  par    = rep(0,2),
+  fn     = sqres_lasso,
+  X      = x,
+  Y      = y,
+  lambda = 100,
+  method = "BFGS"
+)$par
+```
+
+É possível notar que o EMQ é fortemente impactado pela presença do outlier, que afeta não só a estimação pontual dos parâmetros como sua significância no modelo.
+Coisa parecida ocorre quando usamos o bootstrap para estimar os coeficientes de regressão.
+Apesar disso, a estimativa da regressão lasso produz estimativas razoáveis.
+
+```{r}
+#| fig-width:  10
+#| fig-height: 4
+# Para entender melhor  o que está acontecendo no bootstrap
+
+set.seed(12345)
+B = 2e3
+coef = matrix(nrow = B, ncol = 2)
+data = data.frame(y = y, x = x[,-1])
+fun = {\(indices) lm(y ~ x, data = data[indices, ])$coef}
+
+for (b in 1:B) {
+  coef[b, ] = fun(  sample(1:length(y), length(y), replace = T)  )
+}
+
+par(mfrow = c(1,2))
+hist(coef[,1], main = "estimativas bootstrap - β0")
+abline(v = beta[1], lwd = 3, col = 2)
+hist(coef[,2], xlim = c(0,10), breaks = (-100):100,
+     main = "estimativas bootstrap - β1")
+abline(v = beta[2], lwd = 3, col = 2)
 ```
 
 :::
 
 
-Comentários !!!
 
 ### Bootstrap
 
@@ -524,24 +582,25 @@ O gráfico de boxplots acima mostra como os dois modelos se comportam em termos 
 #| code-fold: true
 
 norma =
-  apply(estimativas, c(1,2), crossprod) |>
-  t() |>
+  estimativas |>
+  apply(c(1,3),
+        function (x) c( l2 = crossprod(x[-1]), l1 = sum(abs(x[-1])) )) |>
   tibble::as_tibble() |>
-  cbind(c("intercepto", rep(c(1,2,3), each=10))) |>
-  tibble::as_tibble() |>
-  `colnames<-`(c("glm", "en", "grupo"))
-
-norma_long =
-  norma[-1,] |>
+  dplyr::mutate(
+    norma = c("L2^sq", "L1")
+  ) |>
   tidyr::pivot_longer(
-    cols = c("glm", "en"),
-    names_to = "metodo",
-    values_to = "norma")
+    cols = -norma,
+    names_to = c("metodo", "iter"),
+    names_sep = "\\.",
+    values_to = "valor"
+  ) |>
+  dplyr::mutate(iter = as.integer(iter))
 
-ggplot(norma_long,
-       aes(x = grupo, y = norma, fill = metodo)) +
+ggplot(norma,
+       aes(x = metodo, y = valor, fill = norma)) +
   geom_boxplot(alpha = 0.7) +
-  labs(x = "Grupo", y = "Norma L2",
-       title = "Norma dos Betas por Grupo e Método") +
+  labs(x = "Método", y = "Norma",
+       title = "Norma dos Betas (ao longo das iterações bootstrap)") +
   theme_minimal(base_size = 14)
 ```

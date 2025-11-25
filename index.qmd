@@ -25,10 +25,12 @@ Alguns pacotes que usaremos estão abaixo listados.
 #| eval: false
 if (!{"pak" %in% rownames(installed.packages())}) install.packages("pak")
 
-pak::pak(c("matrixcalc", "glmnet", "tidyverse", "mvtnorm", "ggplot2"))
+pak::pak(c("matrixcalc", "glmnet", "tidyverse", "mvtnorm", "ggplot2", "boot"))
 ```
 
-## Licença ![CC BY 4.0](https://licensebuttons.net/l/by/4.0/88x31.png)
+## Licença
+
+![CC BY 4.0](https://licensebuttons.net/l/by/4.0/88x31.png)
 
 Este trabalho está licenciado sob a licença [Creative Commons Atribuição 4.0 Internacional (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/deed.pt-br).
 
