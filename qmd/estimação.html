@@ -831,7 +831,7 @@ Dica
 </table>
 </div>
 </div>
-<p>Comentários !!!</p>
+<p>Nos primeiro grupo (betas reais não nulos e covariáveis independentes), tanto o <code>glm</code> quanto o EN recuperam bem tanto os sinais quanto as magnitudes dos betas reais e podemos ver bem a ocorrência da <em>shrinkage</em>. Já no segundo bloco (betas reais nulos e covariáveis independentes), a EN se destaca ao manter as estimativas próximas de zero, enquanto o <code>glm</code> frequentemente gera pequenos falsos positivos. Finalmente, no terceiro bloco (betas reais não nulos e covariáveis fortemente dependentes), oEN novamente aplica <em>shrinkage</em> forte nos coeficientes irrelevantes, enquanto o <code>glm</code> tem maior dificuldade em lidar com a colinearidade.</p>
 <div class="callout callout-style-default callout-important callout-titled">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
@@ -844,8 +844,8 @@ Dica
 </div>
 <div id="callout-5" class="callout-5-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<p>Os dados acima foram gerados com uma certa poluição de outlier. Como podemos ver no gráfico abaixo (com outliers marcados com x)</p>
-<div class="cell">
+<p>Os dados acima foram gerados com uma certa poluição de outlier, como podemos ver nos gráficos abaixo.</p>
+<div class="cell" data-layout-align="center">
 <details class="code-fold">
 <summary>Código</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>mod_sem_outliers <span class="ot">=</span> <span class="fu">glm</span>(Y<span class="sc">~</span>., <span class="at">data =</span> df[<span class="sc">-</span>index_outliers,], <span class="at">family =</span> <span class="fu">poisson</span>())</span>
@@ -879,15 +879,14 @@ Dica
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="estimação_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="estimação_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="768"></p>
 <figcaption>Predição do <code>glm</code> com outliers (linha vermelha) vs.&nbsp;sem outliers (linha azul). Outliers inseridos intencionalmente marcados com um x vermelho.</figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p>Quando estimamos usando a função <code>glm</code>, a estimativa do coeficiente da covariável 12 no modelo com os outliers é de -0.095, já no modelo sem outliers essa estimativa passa a ser de -0.002. Além disso, esse coeficiente (originalmente nulo) tornou-se siginificativo com a inclusão dos outliers.</p>
-<p>Comentários !!!</p>
-<p>Um exemplo mais interessante sobre o poder da regularização na contenção do efeito de outliers pode ser visto abaixo.</p>
+<p>Quando estimamos usando a função <code>glm</code>, a estimativa do coeficiente da covariável 12 no modelo com os outliers é de -0.095, já no modelo sem outliers essa estimativa passa a ser de -0.002. Além disso, esse coeficiente (originalmente nulo) tornou-se siginificativo com a inclusão dos outliers. Já na estimação EN, a estimativa pontual é 0.013, o que é mais razoável que a estimativa do <code>glm</code> com outliers (o único que temos acesso). Embora isso não indique se a variável é significativa (segundo a métrica EN), isso produz um modelo mais parcimonioso que o IRLS tradicional</p>
+<p>Podemos ver abaixo um exemplo mais comovente sobre o poder da regularização na contenção do efeito de outliers.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>x <span class="ot">=</span> <span class="fu">cbind</span>(<span class="dv">1</span>, <span class="fu">rnorm</span>(<span class="dv">20</span>))</span>
@@ -895,12 +894,12 @@ Dica
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">2</span>)</span>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>y <span class="ot">=</span> x <span class="sc">%*%</span> beta <span class="sc">+</span> e</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div class="cell">
+<div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(y<span class="sc">~</span>x[,<span class="sc">-</span><span class="dv">1</span>])</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div>
+<div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="estimação_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="768"></p>
+<p><img src="estimação_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="480"></p>
 </figure>
 </div>
 </div>
@@ -936,6 +935,8 @@ Residual standard error: 17.73 on 18 degrees of freedom
 Multiple R-squared:  0.07109,   Adjusted R-squared:  0.01948 
 F-statistic: 1.378 on 1 and 18 DF,  p-value: 0.2558</code></pre>
 </div>
+</div>
+<div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>boot<span class="sc">::</span><span class="fu">boot</span>(</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> <span class="fu">data.frame</span>(<span class="at">y =</span> y, <span class="at">x =</span> x[,<span class="sc">-</span><span class="dv">1</span>]),</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">statistic =</span> {\(data, indices) <span class="fu">lm</span>(y <span class="sc">~</span> x, <span class="at">data =</span> data[indices, ])<span class="sc">$</span>coef},</span>
@@ -957,46 +958,51 @@ Bootstrap Statistics :
 t1* 8.588882 0.03144146    3.681207
 t2* 5.723713 0.25242782    3.843777</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">optim</span>(</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="dv">2</span>),</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">fn     =</span> sqres_lasso,</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">X      =</span> x,</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Y      =</span> y,</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">lambda =</span> <span class="dv">100</span>,</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"BFGS"</span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>)<span class="sc">$</span>par</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Para entender melhor  o que está acontecendo no bootstrap</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>B <span class="ot">=</span> <span class="fl">2e3</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>coef <span class="ot">=</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> B, <span class="at">ncol =</span> <span class="dv">2</span>)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>data <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="at">y =</span> y, <span class="at">x =</span> x[,<span class="sc">-</span><span class="dv">1</span>])</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>fun <span class="ot">=</span> {\(indices) <span class="fu">lm</span>(y <span class="sc">~</span> x, <span class="at">data =</span> data[indices, ])<span class="sc">$</span>coef}</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (b <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>B) {</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  coef[b, ] <span class="ot">=</span> <span class="fu">fun</span>(  <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(y), <span class="fu">length</span>(y), <span class="at">replace =</span> T)  )</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(coef[,<span class="dv">1</span>], <span class="at">main =</span> <span class="st">"estimativas bootstrap - β0"</span>)</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v =</span> beta[<span class="dv">1</span>], <span class="at">lwd =</span> <span class="dv">3</span>, <span class="at">col =</span> <span class="dv">2</span>)</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(coef[,<span class="dv">2</span>], <span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">20</span>), <span class="at">breaks =</span> (<span class="sc">-</span><span class="dv">100</span>)<span class="sc">:</span><span class="dv">100</span>,</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"estimativas bootstrap - β1"</span>)</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v =</span> beta[<span class="dv">2</span>], <span class="at">lwd =</span> <span class="dv">3</span>, <span class="at">col =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="estimação_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">optim</span>(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">par    =</span> <span class="fu">rep</span>(<span class="dv">0</span>,<span class="dv">2</span>),</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">fn     =</span> sqres_lasso,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">X      =</span> x,</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">Y      =</span> y,</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">lambda =</span> <span class="dv">100</span>,</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>)<span class="sc">$</span>par</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 6.356267 2.229249</code></pre>
 </div>
 </div>
 <p>É possível notar que o EMQ é fortemente impactado pela presença do outlier, que afeta não só a estimação pontual dos parâmetros como sua significância no modelo. Coisa parecida ocorre quando usamos o bootstrap para estimar os coeficientes de regressão. Apesar disso, a estimativa da regressão lasso produz estimativas razoáveis.</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Para entender melhor  o que está acontecendo no bootstrap</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>B <span class="ot">=</span> <span class="fl">2e3</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>coef <span class="ot">=</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> B, <span class="at">ncol =</span> <span class="dv">2</span>)</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>data <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="at">y =</span> y, <span class="at">x =</span> x[,<span class="sc">-</span><span class="dv">1</span>])</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>fun <span class="ot">=</span> {\(indices) <span class="fu">lm</span>(y <span class="sc">~</span> x, <span class="at">data =</span> data[indices, ])<span class="sc">$</span>coef}</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (b <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>B) {</span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  coef[b, ] <span class="ot">=</span> <span class="fu">fun</span>(  <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(y), <span class="fu">length</span>(y), <span class="at">replace =</span> T)  )</span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(coef[,<span class="dv">1</span>], <span class="at">main =</span> <span class="st">"estimativas bootstrap - β0"</span>)</span>
-<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v =</span> beta[<span class="dv">1</span>], <span class="at">lwd =</span> <span class="dv">3</span>, <span class="at">col =</span> <span class="dv">2</span>)</span>
-<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(coef[,<span class="dv">2</span>], <span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">10</span>), <span class="at">breaks =</span> (<span class="sc">-</span><span class="dv">100</span>)<span class="sc">:</span><span class="dv">100</span>,</span>
-<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"estimativas bootstrap - β1"</span>)</span>
-<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v =</span> beta[<span class="dv">2</span>], <span class="at">lwd =</span> <span class="dv">3</span>, <span class="at">col =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="estimação_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="960"></p>
-</figure>
-</div>
-</div>
-</div>
 </div>
 </div>
 </div>
@@ -1079,7 +1085,7 @@ t2* 5.723713 0.25242782    3.843777</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="estimação_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="estimação_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
 <figcaption>Variâncias dos betas do grupo 1 (significativos)</figcaption>
 </figure>
 </div>
@@ -1096,7 +1102,7 @@ t2* 5.723713 0.25242782    3.843777</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="estimação_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="estimação_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
 <figcaption>Variâncias dos betas do grupo 2 (não significativos)</figcaption>
 </figure>
 </div>
@@ -1113,7 +1119,7 @@ t2* 5.723713 0.25242782    3.843777</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="estimação_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="estimação_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
 <figcaption>Variâncias dos betas do grupo 3 (covariáveis autocorrelacionadas)</figcaption>
 </figure>
 </div>
@@ -1152,7 +1158,7 @@ t2* 5.723713 0.25242782    3.843777</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="estimação_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="960"></p>
+<p><img src="estimação_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="960"></p>
 </figure>
 </div>
 </div>
@@ -1187,7 +1193,7 @@ t2* 5.723713 0.25242782    3.843777</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="estimação_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="960"></p>
+<p><img src="estimação_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" width="960"></p>
 </figure>
 </div>
 </div>
@@ -1222,7 +1228,7 @@ t2* 5.723713 0.25242782    3.843777</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="estimação_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="960"></p>
+<p><img src="estimação_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid figure-img" width="960"></p>
 </figure>
 </div>
 </div>
