@@ -276,8 +276,7 @@ div.csl-indent {
 <p>Este trabalho está licenciado sob a licença <a href="https://creativecommons.org/licenses/by/4.0/deed.pt-br">Creative Commons Atribuição 4.0 Internacional (CC BY 4.0)</a>.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://licensebuttons.net/l/by/4.0/88x31.png" class="img-fluid figure-img"></p>
-<figcaption>CC BY 4.0</figcaption>
+<p><img src="https://licensebuttons.net/l/by/4.0/88x31.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
 </figure>
 </div>
 </section>
@@ -327,6 +326,23 @@ Zou, H., &amp; Hastie, T. (2005). Regularization and Variable Selection via the 
 </section>
 
 </main> <!-- /main -->
+<script>
+function trocaImagem(el) {
+  const src1 = el.dataset.src1;
+  const src2 = el.dataset.src2;
+  
+  const atual = el.getAttribute("src");
+  
+  const w = el.width;
+  const h = el.height;
+
+  el.setAttribute("src", atual === src1 ? src2 : src1);
+  
+  el.width  = w;
+  el.height = h;
+
+}
+</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";

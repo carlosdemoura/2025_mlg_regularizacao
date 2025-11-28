@@ -126,6 +126,35 @@ div.csl-indent {
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../styles.css">
 </head>
@@ -205,8 +234,17 @@ div.csl-indent {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Índice</h2>
+   
+  <ul>
+  <li><a href="#pré-processamento-dos-dados" id="toc-pré-processamento-dos-dados" class="nav-link active" data-scroll-target="#pré-processamento-dos-dados"><span class="header-section-number">4.1</span> Pré-processamento dos Dados</a></li>
+  <li><a href="#ajuste-dos-modelos" id="toc-ajuste-dos-modelos" class="nav-link" data-scroll-target="#ajuste-dos-modelos"><span class="header-section-number">4.2</span> Ajuste dos Modelos</a></li>
+  <li><a href="#escolha-do-hiperparâmetro-lambda-via-validação-cruzada" id="toc-escolha-do-hiperparâmetro-lambda-via-validação-cruzada" class="nav-link" data-scroll-target="#escolha-do-hiperparâmetro-lambda-via-validação-cruzada"><span class="header-section-number">4.3</span> Escolha do Hiperparâmetro (<span class="math inline">\(\lambda\)</span>) via Validação Cruzada</a></li>
+  <li><a href="#inferência-e-esparsidade" id="toc-inferência-e-esparsidade" class="nav-link" data-scroll-target="#inferência-e-esparsidade"><span class="header-section-number">4.4</span> Inferência e Esparsidade</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -231,13 +269,199 @@ div.csl-indent {
 
 
 <div style="text-align: right">
-<p>“Minha jangada vai sair por mar”</p>
+<p>“Minha jangada vai sair por mar”<br> Caymmi</p>
 </div>
-<p>Esparsidade, multicolinearidade e outliers</p>
+<p>Para consolidar os conceitos de regularização, aplicaremos em um cenário apresentado por Golub et al.&nbsp;(1999), um conjunto de dados de expressão gênica com respostas binárias que indicam o tipo de Leucemia, ALL (Leucemia Linfoblástica Aguda) e AML (Leucemia Mieloide Aguda).</p>
+<p>Assim como em <span class="citation" data-cites="en_glm2">J. H. Friedman, Hastie, &amp; Tibshirani (<a href="referências.html#ref-en_glm2" role="doc-biblioref">2010</a>)</span>, utilizaremos os dados pré-processados por Dettling (2004).</p>
+<p>Esse dataset é do tipo <span class="math inline">\(p \gg N\)</span>, ou seja, milhares de genes, poucos pacientes, tornando a regularização quase como obrigatória - visto que um modelo logístico tradicional não possui graus de liberdade suficientes para estimar os coeficientes.</p>
+<section id="pré-processamento-dos-dados" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="pré-processamento-dos-dados"><span class="header-section-number">4.1</span> Pré-processamento dos Dados</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span></span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 1</code></pre>
+<details class="code-fold">
+<summary>Código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glmnet)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="st">"https://web.stanford.edu/~hastie/glmnet/glmnetData/Leukemia.RData"</span> <span class="sc">|&gt;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">url</span>() <span class="sc">|&gt;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">load</span>()</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> Leukemia<span class="sc">$</span>x</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> Leukemia<span class="sc">$</span>y</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>count_y0 <span class="ot">&lt;-</span> <span class="fu">sum</span>(y <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>count_y1 <span class="ot">&lt;-</span> <span class="fu">sum</span>(y <span class="sc">==</span> <span class="dv">1</span>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>tabela <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">N =</span> <span class="fu">nrow</span>(X),</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>          <span class="at">p =</span> <span class="fu">ncol</span>(X),</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>          <span class="at">y0 =</span> count_y0,</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>          <span class="at">y1 =</span> count_y1)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(tabela, </span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Observações$(N)$"</span>,</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"Preditores$(p)$"</span>,</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"$Y=0$"</span>,</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"$Y=1$"</span>),</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">align =</span> <span class="fu">c</span>(<span class="st">'l'</span>, <span class="st">'l'</span>, <span class="st">'c'</span>, <span class="st">'c'</span>))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Observações<span class="math inline">\((N)\)</span></th>
+<th style="text-align: left;">Preditores<span class="math inline">\((p)\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(Y=0\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(Y=1\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">72</td>
+<td style="text-align: left;">3571</td>
+<td style="text-align: center;">47</td>
+<td style="text-align: center;">25</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="ajuste-dos-modelos" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="ajuste-dos-modelos"><span class="header-section-number">4.2</span> Ajuste dos Modelos</h2>
+<ol type="1">
+<li><p><strong>Ridge (<span class="math inline">\(\alpha = 0\)</span>):</strong> Mantém todas os genes, encolhendo os coeficientes em direção a zero.</p></li>
+<li><p><strong>Lasso (<span class="math inline">\(\alpha=1\)</span>):</strong> Zera a maioria dos coeficientes rapidamente, realizando seleção de genes mais informativos.</p></li>
+<li><p><strong>Elastic Net (<span class="math inline">\(\alpha=0.5\)</span>):</strong> Combinação de ambas, agrupando variáveis correlacionadas.</p></li>
+</ol>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>fit_ridge <span class="ot">&lt;-</span> <span class="fu">glmnet</span>(X, y, <span class="at">family =</span> <span class="st">"binomial"</span>, <span class="at">alpha =</span> <span class="dv">0</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>fit_lasso <span class="ot">&lt;-</span> <span class="fu">glmnet</span>(X, y, <span class="at">family =</span> <span class="st">"binomial"</span>, <span class="at">alpha =</span> <span class="dv">1</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>fit_enet  <span class="ot">&lt;-</span> <span class="fu">glmnet</span>(X, y, <span class="at">family =</span> <span class="st">"binomial"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>), </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="fl">4.5</span>, <span class="dv">6</span>, <span class="dv">2</span>), </span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">oma =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">2</span>, <span class="dv">0</span>))</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(fit_ridge, <span class="at">xvar =</span> <span class="st">"lambda"</span>, <span class="at">main =</span> <span class="st">"Ridge"</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(fit_enet, <span class="at">xvar =</span> <span class="st">"lambda"</span>, <span class="at">main =</span> <span class="st">"Elastic Net"</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(fit_lasso, <span class="at">xvar =</span> <span class="st">"lambda"</span>, <span class="at">main =</span> <span class="st">"LASSO"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="exemplo_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="escolha-do-hiperparâmetro-lambda-via-validação-cruzada" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="escolha-do-hiperparâmetro-lambda-via-validação-cruzada"><span class="header-section-number">4.3</span> Escolha do Hiperparâmetro (<span class="math inline">\(\lambda\)</span>) via Validação Cruzada</h2>
+<p>Para encontrar o melhor valor para o hiperparâmetro <span class="math inline">\(\lambda\)</span> usaremos <code>cv.glmnet</code> que utiliza k-fold cross-validation (padrão <span class="math inline">\(k=10\)</span>) e a métrica de desvio (deviance) ou erro de classificação.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2025</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>cv_lasso <span class="ot">&lt;-</span> <span class="fu">cv.glmnet</span>(X, y, <span class="at">family =</span> <span class="st">"binomial"</span>, <span class="at">alpha =</span> <span class="dv">1</span>, <span class="at">type.measure =</span> <span class="st">"class"</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>cv_ridge <span class="ot">&lt;-</span> <span class="fu">cv.glmnet</span>(X, y, <span class="at">family =</span> <span class="st">"binomial"</span>, <span class="at">alpha =</span> <span class="dv">0</span>, <span class="at">type.measure =</span> <span class="st">"class"</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>cv_enet  <span class="ot">&lt;-</span> <span class="fu">cv.glmnet</span>(X, y, <span class="at">family =</span> <span class="st">"binomial"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>, <span class="at">type.measure =</span> <span class="st">"class"</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>min_y <span class="ot">&lt;-</span> <span class="fu">min</span>(<span class="fu">c</span>(cv_ridge<span class="sc">$</span>cvm, cv_lasso<span class="sc">$</span>cvm, cv_enet<span class="sc">$</span>cvm))</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>max_y <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="fu">c</span>(cv_ridge<span class="sc">$</span>cvm, cv_lasso<span class="sc">$</span>cvm, cv_enet<span class="sc">$</span>cvm))</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>), </span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="fl">4.5</span>, <span class="dv">6</span>, <span class="dv">2</span>), </span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">oma =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">2</span>, <span class="dv">0</span>))</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(cv_ridge, <span class="at">ylim =</span> <span class="fu">c</span>(min_y, max_y))</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span>(<span class="st">"Ridge"</span>, <span class="at">line =</span> <span class="fl">2.5</span>)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(cv_enet, <span class="at">ylim =</span> <span class="fu">c</span>(min_y, max_y))</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span>(<span class="st">"Elastic Net"</span>, <span class="at">line =</span> <span class="fl">2.5</span>)</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(cv_lasso, <span class="at">ylim =</span> <span class="fu">c</span>(min_y, max_y))</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span>(<span class="st">"LASSO"</span>, <span class="at">line =</span> <span class="fl">2.5</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="exemplo_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="inferência-e-esparsidade" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="inferência-e-esparsidade"><span class="header-section-number">4.4</span> Inferência e Esparsidade</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>get_metrics <span class="ot">&lt;-</span> <span class="cf">function</span>(cv_fit, name) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  lambda_optimal <span class="ot">&lt;-</span> cv_fit<span class="sc">$</span>lambda.min</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  coefs <span class="ot">&lt;-</span> <span class="fu">coef</span>(cv_fit, <span class="at">s =</span> <span class="st">"lambda.min"</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  n_nonzero <span class="ot">&lt;-</span> <span class="fu">sum</span>(coefs <span class="sc">!=</span> <span class="dv">0</span>) <span class="sc">-</span> <span class="dv">1</span> </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">data.frame</span>(</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">Modelo =</span> name,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">Lambda_Opt =</span> <span class="fu">round</span>(<span class="fu">log</span>(lambda_optimal), <span class="dv">3</span>),</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">Genes_Selecionados =</span> n_nonzero,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">Erro_CV_Min =</span> <span class="fu">round</span>(<span class="fu">min</span>(cv_fit<span class="sc">$</span>cvm), <span class="dv">4</span>) </span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>resultados <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">get_metrics</span>(cv_ridge, <span class="st">"Ridge (Alpha=0)"</span>),</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">get_metrics</span>(cv_enet, <span class="st">"Elastic Net (Alpha=0.5)"</span>),</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">get_metrics</span>(cv_lasso, <span class="st">"LASSO (Alpha=1)"</span>)</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(resultados, </span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">caption =</span> <span class="st">"Comparação de Desempenho: Ridge, Elastic Net e LASSO"</span>,</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Modelo"</span>, <span class="st">"Log($</span><span class="sc">\\</span><span class="st">lambda$)"</span>, <span class="st">"Genes Selecionados"</span>, <span class="st">"Erro Mínimo (CV)"</span>),</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">align =</span> <span class="fu">c</span>(<span class="st">'l'</span>, <span class="st">'c'</span>, <span class="st">'c'</span>, <span class="st">'c'</span>),</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">digits =</span> <span class="dv">4</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Comparação de Desempenho: Ridge, Elastic Net e LASSO</caption>
+<colgroup>
+<col style="width: 30%">
+<col style="width: 20%">
+<col style="width: 25%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Modelo</th>
+<th style="text-align: center;">Log(<span class="math inline">\(\lambda\)</span>)</th>
+<th style="text-align: center;">Genes Selecionados</th>
+<th style="text-align: center;">Erro Mínimo (CV)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Ridge (Alpha=0)</td>
+<td style="text-align: center;">3.875</td>
+<td style="text-align: center;">3571</td>
+<td style="text-align: center;">0.0139</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Elastic Net (Alpha=0.5)</td>
+<td style="text-align: center;">-2.107</td>
+<td style="text-align: center;">38</td>
+<td style="text-align: center;">0.0139</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LASSO (Alpha=1)</td>
+<td style="text-align: center;">-4.056</td>
+<td style="text-align: center;">16</td>
+<td style="text-align: center;">0.0278</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 
@@ -271,8 +495,26 @@ Tibshirani, R. (1996). Regression Shrinkage and Selection via the Lasso. <em>Jou
 Zou, H., &amp; Hastie, T. (2005). Regularization and Variable Selection via the Elastic Net. <em>Journal of the Royal Statistical Society. Series B (Statistical Methodology)</em>, <em>67</em>(2), 301–320. Obtido de <a href="https://www.jstor.org/stable/3647580">https://www.jstor.org/stable/3647580</a>
 </div>
 </div>
+</section>
 
 </main> <!-- /main -->
+<script>
+function trocaImagem(el) {
+  const src1 = el.dataset.src1;
+  const src2 = el.dataset.src2;
+  
+  const atual = el.getAttribute("src");
+  
+  const w = el.width;
+  const h = el.height;
+
+  el.setAttribute("src", atual === src1 ? src2 : src1);
+  
+  el.width  = w;
+  el.height = h;
+
+}
+</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
