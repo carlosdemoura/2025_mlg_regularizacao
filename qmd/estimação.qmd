@@ -235,35 +235,40 @@ cv$lambda.1se
 :::
 
 ```{r}
-sqres_en = function(beta, w, z) {
-  sum(  w * (z - X %*% beta)^2  ) / (2 * nrow(X)) +
-    lambda * (  alpha * sum(abs(beta[-1])) + ((1 - alpha)/2) * crossprod(beta[-1])  )
+estimativa_en = function(Y, X, alpha, lambda, iter = 20, init = 1) {
+  sqres_en = function(beta, w, z) {
+    sum(  w * (z - X %*% beta)^2  ) / (2 * nrow(X)) +
+      lambda * (  alpha * sum(abs(beta[-1])) + ((1 - alpha)/2) * crossprod(beta[-1])  )
+  }
+  
+  beta_hat = matrix(nrow = iter, ncol = 3*bloco+1)
+  beta_hat[1,] = init
+  
+  for (t in 2:iter) {
+    eta = X %*% beta_hat[t-1,]
+    mu = exp(eta)
+    z = eta + (Y - mu)/mu
+    beta_hat[t,] = 
+      optim(
+        par    = rep(0,ncol(X)),
+        fn     = sqres_en,
+        w      = mu,
+        z      = z,
+        method = "BFGS"
+      )$par
+  }
+  
+  beta_hat[t,]
 }
 
-iter = 20
-alpha = 0.9; lambda = cv$lambda.1se
-beta_hat = matrix(1, nrow = iter, ncol = 3*bloco+1)
-
-for (t in 2:iter) {
-  eta = X %*% beta_hat[t-1,]
-  mu = exp(eta)
-  z = eta + (Y - mu)/mu
-  beta_hat[t,] = 
-    optim(
-      par    = rep(0,ncol(X)),
-      fn     = sqres_en,
-      w      = mu,
-      z      = z,
-      method = "BFGS"
-    )$par
-}
+beta_en = estimativa_en(Y, X, alpha = 0.9, lambda = cv$lambda.1se)
 ```
 
 
 ```{r}
 #| code-fold: true
 estimativas = 
-  cbind(  0:(3*bloco),  beta_hat[iter,],  beta,  unname(mod$coefficients)  ) |>
+  cbind(  0:(3*bloco),  beta_en,  beta,  unname(mod$coefficients)  ) |>
   tibble::as_tibble() |>
   `colnames<-`(c("index", "estimativa en", "real", "estimativa glm"))
 
@@ -288,18 +293,17 @@ estimativas[21:30+1,] |>
 
 Nos primeiro grupo (betas reais não nulos e covariáveis independentes), tanto o `glm` quanto o EN recuperam bem tanto os sinais quanto as magnitudes dos betas reais e podemos ver bem a ocorrência da _shrinkage_. Já no segundo bloco (betas reais nulos e covariáveis independentes), a EN se destaca ao manter as estimativas próximas de zero, enquanto o `glm` frequentemente gera pequenos falsos positivos. Finalmente, no terceiro bloco (betas reais não nulos e covariáveis fortemente dependentes), oEN novamente aplica _shrinkage_ forte nos coeficientes irrelevantes, enquanto o `glm` tem maior dificuldade em lidar com a colinearidade.
 
-::: {.callout-important collapse="true"}
 
-## Lidando com outliers
 
-Os dados acima foram gerados com uma certa poluição de outlier, como podemos ver nos gráficos abaixo.
+
+### Lidando com outliers
+
+Os dados acima foram gerados com uma certa poluição de outliers, como podemos ver nos gráficos abaixo.
 
 ```{r}
 #| code-fold: true
 #| fig-cap: "Predição do `glm` com outliers (linha vermelha) vs. sem outliers (linha azul). Outliers inseridos intencionalmente marcados com um x vermelho."
-#| fig-width:  8
-#| fig-height: 4
-#| fig-align: "center"
+#| eval: false
 
 mod_sem_outliers = glm(Y~., data = df[-index_outliers,], family = poisson())
 # summary(mod_sem_outliers)
@@ -309,26 +313,81 @@ x_seq = seq(min(X[,col+1]), max(X[,col+1]), length.out = 200)
 y_hat_sem_outlier = exp(summary(mod_sem_outliers)$coef[1] + summary(mod_sem_outliers)$coef[col+1] * x_seq)
 y_hat_com_outlier = exp(summary(mod)$coef[1] + summary(mod)$coef[col+1] * x_seq)
 
-par(mfrow = c(1,2))
-for (limsup in c(160, 10)) {
-  plot(Y~X[,col+1],
-       ylim = c(0,limsup),
-       main = "",
-       xlab = paste("X", col),
-       ylab = "Y"
-       )
-  points(
-    X[index_outliers,col+1],
-    Y[index_outliers],
-    col = "red",
-    pch = 4,
-    cex = 1.5,
-    lwd = 2
-  )
-  lines(x_seq, y_hat_sem_outlier, col = "blue", lwd = 2)
-  lines(x_seq, y_hat_com_outlier, col = "red",  lwd = 2)
-}
+plot(Y~X[,col+1],
+     #ylim = c(0,10),
+     main = "",
+     xlab = paste("X", col),
+     ylab = "Y"
+     )
+points(
+  X[index_outliers,col+1],
+  Y[index_outliers],
+  col = "red",
+  pch = 4,
+  cex = 1.5,
+  lwd = 2
+)
+lines(x_seq, y_hat_sem_outlier, col = "blue", lwd = 2)
+lines(x_seq, y_hat_com_outlier, col = "red",  lwd = 2)
 ```
+
+
+
+```{r}
+#| include: false
+
+mod_sem_outliers = glm(Y~., data = df[-index_outliers,], family = poisson())
+col = 11
+x_seq = seq(min(X[,col+1]), max(X[,col+1]), length.out = 200)
+y_hat_sem_outlier = exp(summary(mod_sem_outliers)$coef[1] + summary(mod_sem_outliers)$coef[col+1] * x_seq)
+y_hat_com_outlier = exp(summary(mod)$coef[1] + summary(mod)$coef[col+1] * x_seq)
+
+png("../img/tmp/pois1.png")
+plot(Y~X[,col+1],
+     main = "",
+     xlab = paste("X", col),
+     ylab = "Y"
+     )
+points(
+  X[index_outliers,col+1],
+  Y[index_outliers],
+  col = "red",
+  pch = 4,
+  cex = 1.5,
+  lwd = 2
+)
+lines(x_seq, y_hat_sem_outlier, col = "blue", lwd = 2)
+lines(x_seq, y_hat_com_outlier, col = "red",  lwd = 2)
+dev.off()
+
+png("../img/tmp/pois2.png")
+plot(Y~X[,col+1],
+     ylim = c(0,10),
+     main = "",
+     xlab = paste("X", col),
+     ylab = "Y"
+     )
+points(
+  X[index_outliers,col+1],
+  Y[index_outliers],
+  col = "red",
+  pch = 4,
+  cex = 1.5,
+  lwd = 2
+)
+lines(x_seq, y_hat_sem_outlier, col = "blue", lwd = 2)
+lines(x_seq, y_hat_com_outlier, col = "red",  lwd = 2)
+dev.off()
+```
+
+<img class="flip"
+     src="../img/tmp/pois1.png"
+     data-src1="../img/tmp/pois1.png"
+     data-src2="../img/tmp/pois2.png"
+     width="400" height="500"
+     onclick="trocaImagem(this)">
+
+
 
 Quando estimamos usando a função `glm`, a estimativa do coeficiente da covariável `r col+1` no modelo com os outliers é de `r round(summary(mod)$coef[col+1], 3)`, já no modelo sem outliers essa estimativa passa a ser de  `r round(summary(mod_sem_outliers)$coef[col+1], 3)`. Além disso, esse coeficiente (originalmente nulo) tornou-se siginificativo com a inclusão dos outliers. Já na estimação EN, a estimativa pontual é `r round(estimativas[col+1,]$"estimativa en", 3)`, o que é mais razoável que a estimativa do `glm` com outliers (o único que temos acesso). Embora isso não indique se a variável é significativa (segundo a métrica EN), isso produz um modelo mais parcimonioso que o IRLS tradicional
 
@@ -347,15 +406,6 @@ y = x %*% beta + e
 #| fig-height: 4
 #| fig-align: "center"
 plot(y~x[,-1])
-```
-
-```{r}
-#| code-fold: true
-
-sqres_lasso = function(beta, X, Y, lambda) {
-  res = Y - X %*% beta
-  drop(crossprod(res) + lambda * sum(abs(beta)))
-}
 ```
 
 ```{r}
@@ -395,6 +445,11 @@ abline(v = beta[2], lwd = 3, col = 2)
 ```
 
 ```{r}
+sqres_lasso = function(beta, X, Y, lambda) {
+  res = Y - X %*% beta
+  drop(crossprod(res) + lambda * sum(abs(beta)))
+}
+
 optim(
   par    = rep(0,2),
   fn     = sqres_lasso,
@@ -405,16 +460,251 @@ optim(
 )$par
 ```
 
+```{r}
+#| fig-width:  5
+#| fig-height: 4
+#| fig-align: "center"
+#| code-fold: true
+beta_lasso = 
+  optim(
+    par    = rep(0,2),
+    fn     = sqres_lasso,
+    X      = x,
+    Y      = y,
+    lambda = 100,
+    method = "BFGS"
+  )$par
+beta_lm = lm(y~x[,-1])$coef |> unname()
+
+x_seq = seq(-2, 2, length.out = 100)
+y_hat_lm = beta_lm[1] + x_seq * beta_lm[2]
+y_hat_lasso = beta_lasso[1] + x_seq * beta_lasso[2]
+
+plot(y~x[,-1])
+lines(x_seq, y_hat_lasso, col = "blue", lwd = 2)
+lines(x_seq, y_hat_lm, col = "red", lwd = 2)
+```
+
 É possível notar que o EMQ é fortemente impactado pela presença do outlier, que afeta não só a estimação pontual dos parâmetros como sua significância no modelo.
 Coisa parecida ocorre quando usamos o bootstrap para estimar os coeficientes de regressão.
-Apesar disso, a estimativa da regressão lasso produz estimativas razoáveis.
-
-:::
+Apesar disso, a regressão lasso produz estimativas razoáveis.
 
 
 
 
 
+
+
+
+### Análise de resíduos - parte 1
+
+É razoável que uma mudança na estimação dos coeficientes mude também a distribuição dos resíduos.
+
+```{r}
+beta_en  = estimativa_en(Y, X, alpha = 0.9, lambda = cv$lambda.1se)
+beta_glm = mod$coef |> unname()
+
+res_en  = ( Y - exp(X %*% beta_en) ) / sqrt(exp(X %*% beta_en))
+res_glm = ( Y - exp(X %*% beta_glm) ) / sqrt(exp(X %*% beta_glm))
+```
+
+```{r}
+#| eval: false
+#| code-fold: true
+
+par(mfrow = c(1,2))
+plot(sort(res_glm))
+plot(sort(res_en))
+```
+
+```{r}
+#| include: false
+
+png("../img/tmp/env11.png", width = 800, height = 400)
+layout(matrix(c(1, 2), nrow = 1, ncol = 2))
+plot(sort(res_glm))
+plot(sort(res_en))
+dev.off()
+
+png("../img/tmp/env12.png", width = 800, height = 400)
+layout(matrix(c(1, 2), nrow = 1, ncol = 2))
+plot(sort(res_glm), ylim = c(-5,5))
+plot(sort(res_en), ylim = c(-5,5))
+dev.off()
+```
+
+<img class="flip"
+     src="../img/tmp/env11.png"
+     data-src1="../img/tmp/env11.png"
+     data-src2="../img/tmp/env12.png"
+     width="800" height="400"
+     onclick="trocaImagem(this)">
+
+
+
+
+```{r}
+#| eval: false
+set.seed(12345)
+B = 1000
+
+res_boot_glm = matrix(nrow = B, ncol = length(Y))
+for (b in 1:B) {
+  Yb = rpois(length(Y), exp(X %*% beta_glm))
+  beta_b = glm(Yb ~ X[,-1], family = poisson())$coef |> unname()
+  res_boot_glm[b,] = ( Yb - exp(X %*% beta_b) ) / sqrt(exp(X %*% beta_b))
+}
+envelope_glm =
+  res_boot_glm |>
+  apply(2,
+        \(col) quantile(col, probs = c(0.05, 0.95))
+    ) |>
+  t()
+
+
+res_boot_en = matrix(nrow = B, ncol = length(Y))
+for (b in 1:B) {
+  Yb = rpois(length(Y), exp(X %*% beta_en))
+  beta_b = estimativa_en(Yb, X, alpha = 0.9, lambda = cv$lambda.1se, iter = 10, init = beta_en)
+  #beta_b = estimativa_en(Yb, X, alpha = 0.9, lambda = cv$lambda.1se)
+  res_boot_en[b,] = ( Yb - exp(X %*% beta_b) ) / sqrt(exp(X %*% beta_b))
+}
+envelope_en =
+  res_boot_en |>
+  apply(2,
+        \(col) quantile(col, probs = c(0.05, 0.95), na.rm = T)
+    ) |>
+  t()
+
+saveRDS(list("glm" = envelope_glm, "en" = envelope_en), "../data/envelopes.rds")
+```
+
+```{r}
+#| include: false
+
+envelopes = readRDS("../data/envelopes.rds")
+envelope_glm = envelopes$glm
+envelope_en = envelopes$en
+```
+
+
+
+```{r}
+#| eval: false
+#| code-fold: true
+par(mfrow=c(1,2))
+plot(sort(res_glm), ylim = c(-5,5))
+lines(sort(envelope_glm[,1]))
+lines(sort(envelope_glm[,2]))
+
+plot(sort(res_en), ylim = c(-5,5))
+lines(sort(envelope_en[,1]))
+lines(sort(envelope_en[,2]))
+```
+
+```{r}
+#| include: false
+
+png("../img/tmp/env21.png", width = 800, height = 400)
+layout(matrix(c(1, 2), nrow = 1, ncol = 2))
+plot(sort(res_glm))
+lines(sort(envelope_glm[,1]))
+lines(sort(envelope_glm[,2]))
+
+plot(sort(res_en))
+lines(sort(envelope_en[,1]))
+lines(sort(envelope_en[,2]))
+dev.off()
+
+png("../img/tmp/env22.png", width = 800, height = 400)
+layout(matrix(c(1, 2), nrow = 1, ncol = 2))
+plot(sort(res_glm), ylim = c(-5,5))
+lines(sort(envelope_glm[,1]))
+lines(sort(envelope_glm[,2]))
+
+plot(sort(res_en), ylim = c(-5,5))
+lines(sort(envelope_en[,1]))
+lines(sort(envelope_en[,2]))
+dev.off()
+```
+
+<img class="flip"
+     src="../img/tmp/env21.png"
+     data-src1="../img/tmp/env21.png"
+     data-src2="../img/tmp/env22.png"
+     width="800" height="400"
+     onclick="trocaImagem(this)">
+
+
+
+
+```{r}
+#| code-fold: true
+cat("porcentagem dentro do envelope\n",
+    "EN\t",
+    sum(res_en > envelope_en[,1] & res_en < envelope_en[,2]) / length(res_en) * 100,
+    "\nMLE\t",
+    sum(res_glm > envelope_glm[,1] & res_glm < envelope_glm[,2]) / length(res_glm) * 100
+)
+```
+
+```{r}
+set.seed(12345)
+x = cbind(1, rnorm(20))
+e = rt(20, 1)
+beta = c(5, 2)
+y = x %*% beta + e
+
+beta_lasso = 
+  optim(
+    par    = rep(0,2),
+    fn     = sqres_lasso,
+    X      = x,
+    Y      = y,
+    lambda = 100,
+    method = "BFGS"
+  )$par
+beta_lm = lm(y~x[,-1])$coef |> unname()
+
+res_lasso = y - x %*% beta_lasso
+res_lm    = y - x %*% beta_lm
+```
+
+```{r}
+#| eval: false
+#| code-fold: true
+par(mfrow=c(1,2))
+qqnorm(res_lm, ylim = c(-10,10))
+qqnorm(res_lasso, ylim = c(-10,10))
+```
+
+```{r}
+#| include: false
+png("../img/tmp/env31.png", width = 800, height = 400)
+layout(matrix(c(1, 2), nrow = 1, ncol = 2))
+qqnorm(res_lm,
+       ylab = "lm")
+qqnorm(res_lasso,
+       ylab = "lasso")
+dev.off()
+
+png("../img/tmp/env32.png", width = 800, height = 400)
+layout(matrix(c(1, 2), nrow = 1, ncol = 2))
+qqnorm(res_lm,
+       ylab = "lm",
+       ylim = c(-10,10))
+qqnorm(res_lasso,
+       ylab = "lasso",
+       ylim = c(-10,10))
+dev.off()
+```
+
+<img class="flip"
+     src="../img/tmp/env31.png"
+     data-src1="../img/tmp/env31.png"
+     data-src2="../img/tmp/env32.png"
+     width="800" height="400"
+     onclick="trocaImagem(this)">
 
 
 
@@ -431,7 +721,7 @@ Por fim, vale ressaltar que o bootstrap se faz necessário pois não sabemos qua
 ```{r}
 set.seed(12345)
 
-iter = 400
+iter = 200
 n = 200
 bloco = 10
 
@@ -609,7 +899,7 @@ norma =
         function (x) c( l2 = crossprod(x[-1]), l1 = sum(abs(x[-1])) )) |>
   tibble::as_tibble() |>
   dplyr::mutate(
-    norma = c("L2^sq", "L1")
+    norma = c("L2^2", "L1")
   ) |>
   tidyr::pivot_longer(
     cols = -norma,

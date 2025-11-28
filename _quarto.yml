@@ -1,6 +1,9 @@
 project:
   type: book
 
+resources:
+  - img/
+
 book:
   title: "Regularização em MLGs"
   author: "Carlos de Moura"
@@ -28,6 +31,8 @@ format:
       - brand
     code-fold: false
     css: styles.css
+    include-after-body: script.js
+
     
 execute:
   freeze: auto

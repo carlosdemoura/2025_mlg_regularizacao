@@ -7,6 +7,11 @@
 Como já vimos anteriormente, a seleção dos parâmetros de regularização é um passo importante na regularização. Não deve ser surpresa para o leitor mais atento que isso será feito por validação cruzada.
 Uma vez que já apresentamos os principais passos do IRLS-EN, doravante usaremos o pacote `glmnet` (@glmnet), que foi desenvolvido - dentre outros - pelas mesmas mentes por trás da regressão lasso e elastic net, como Tibshirani e Hastie. O pacote conta com diversas rotinas para a implementação da regularização em muitas famílias comuns de MLG (normal, binomial, poisson, etc.).
 
+
+
+
+
+
 ::: {.callout-tip}
 # Outros pacotes
 

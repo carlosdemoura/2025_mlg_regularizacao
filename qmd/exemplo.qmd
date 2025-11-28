@@ -1,11 +1,138 @@
 # Exemplo prático
 
 ::: {style="text-align: right"}
-"Minha jangada vai sair por mar"
+"Minha jangada vai sair por mar"<br>
+Caymmi
 :::
 
-Esparsidade, multicolinearidade e outliers
+Para consolidar os conceitos de regularização, aplicaremos em um cenário apresentado por Golub et al. (1999), um conjunto de dados de expressão gênica com respostas binárias que indicam o tipo de Leucemia, ALL (Leucemia Linfoblástica Aguda) e AML (Leucemia Mieloide Aguda).
+
+Assim como em @en_glm2, utilizaremos os dados pré-processados por Dettling (2004).
+
+Esse dataset é do tipo $p \gg N$, ou seja, milhares de genes, poucos pacientes, tornando a regularização quase como obrigatória - visto que um modelo logístico tradicional não possui graus de liberdade suficientes para estimar os coeficientes.
+
+## Pré-processamento dos Dados
 
 ```{r}
-1
+#| warning: false
+#| message: false
+#| fig-width:  10
+#| fig-height: 5
+#| code-fold: true
+
+library(glmnet)
+library(knitr)
+library(ggplot2)
+library(tidyr)
+
+
+"https://web.stanford.edu/~hastie/glmnet/glmnetData/Leukemia.RData" |>
+  url() |>
+  load()
+
+X <- Leukemia$x
+y <- Leukemia$y
+
+
+count_y0 <- sum(y == 0)
+count_y1 <- sum(y == 1)
+
+tabela <- data.frame(N = nrow(X),
+          p = ncol(X),
+          y0 = count_y0,
+          y1 = count_y1)
+kable(tabela, 
+      col.names = c("Observações$(N)$",
+                    "Preditores$(p)$",
+                    "$Y=0$",
+                    "$Y=1$"),
+      align = c('l', 'l', 'c', 'c'))
+
 ```
+
+## Ajuste dos Modelos
+
+1. **Ridge ($\alpha = 0$):** Mantém todas os genes, encolhendo os coeficientes em direção a zero.
+
+2. **Lasso ($\alpha=1$):** Zera a maioria dos coeficientes rapidamente, realizando seleção de genes mais informativos.
+
+3. **Elastic Net ($\alpha=0.5$):** Combinação de ambas, agrupando variáveis correlacionadas.
+
+
+```{r}
+fit_ridge <- glmnet(X, y, family = "binomial", alpha = 0)
+
+fit_lasso <- glmnet(X, y, family = "binomial", alpha = 1)
+
+fit_enet  <- glmnet(X, y, family = "binomial", alpha = 0.5)
+
+par(mfrow = c(1, 3), 
+    mar = c(4, 4.5, 6, 2), 
+    oma = c(0, 0, 2, 0))
+
+plot(fit_ridge, xvar = "lambda", main = "Ridge")
+plot(fit_enet, xvar = "lambda", main = "Elastic Net")
+plot(fit_lasso, xvar = "lambda", main = "LASSO")
+```
+
+## Escolha do Hiperparâmetro ($\lambda$) via Validação Cruzada
+
+Para encontrar o melhor valor para o hiperparâmetro $\lambda$ usaremos `cv.glmnet` que utiliza k-fold cross-validation (padrão $k=10$) e a métrica de desvio (deviance) ou erro de classificação.
+
+```{r}
+set.seed(2025)
+
+cv_lasso <- cv.glmnet(X, y, family = "binomial", alpha = 1, type.measure = "class")
+cv_ridge <- cv.glmnet(X, y, family = "binomial", alpha = 0, type.measure = "class")
+cv_enet  <- cv.glmnet(X, y, family = "binomial", alpha = 0.5, type.measure = "class")
+
+min_y <- min(c(cv_ridge$cvm, cv_lasso$cvm, cv_enet$cvm))
+max_y <- max(c(cv_ridge$cvm, cv_lasso$cvm, cv_enet$cvm))
+
+
+par(mfrow = c(1, 3), 
+    mar = c(4, 4.5, 6, 2), 
+    oma = c(0, 0, 2, 0))
+
+plot(cv_ridge, ylim = c(min_y, max_y))
+title("Ridge", line = 2.5)
+
+plot(cv_enet, ylim = c(min_y, max_y))
+title("Elastic Net", line = 2.5)
+
+plot(cv_lasso, ylim = c(min_y, max_y))
+title("LASSO", line = 2.5)
+```
+
+## Inferência e Esparsidade
+
+```{r}
+get_metrics <- function(cv_fit, name) {
+  lambda_optimal <- cv_fit$lambda.min
+  
+  coefs <- coef(cv_fit, s = "lambda.min")
+  
+  n_nonzero <- sum(coefs != 0) - 1 
+  
+  return(data.frame(
+    Modelo = name,
+    Lambda_Opt = round(log(lambda_optimal), 3),
+    Genes_Selecionados = n_nonzero,
+    Erro_CV_Min = round(min(cv_fit$cvm), 4) 
+  ))
+}
+
+
+resultados <- rbind(
+  get_metrics(cv_ridge, "Ridge (Alpha=0)"),
+  get_metrics(cv_enet, "Elastic Net (Alpha=0.5)"),
+  get_metrics(cv_lasso, "LASSO (Alpha=1)")
+)
+
+kable(resultados, 
+      caption = "Comparação de Desempenho: Ridge, Elastic Net e LASSO",
+      col.names = c("Modelo", "Log($\\lambda$)", "Genes Selecionados", "Erro Mínimo (CV)"),
+      align = c('l', 'c', 'c', 'c'),
+      digits = 4)
+```
+

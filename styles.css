@@ -5,3 +5,10 @@
   margin-top: 8px;
 }
 
+.flip {
+  display: block;
+  margin: 0 auto;
+  padding: 0;
+  cursor: pointer;
+  object-fit: contain;
+}
