@@ -103,8 +103,8 @@ matrixcalc::is.singular.matrix(t(X)%*%X)
 #| fig-width:  10
 #| fig-height: 4
 par(mfrow=c(1,2))
-plot(Y~X[,1])
-plot(Y~X[,2])
+plot(Y~X[,1], xlim = c(0,20))
+plot(Y~X[,2], xlim = c(0,20))
 ```
 
 ```{r}

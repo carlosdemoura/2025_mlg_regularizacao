@@ -1,13 +1,5 @@
 # Estimação
 
-::: {style="text-align: right"}
-"Se isto for possível,<br>
-Pois, me contem,<br>
-Como escrever de novo,<br>
-Um jornal de ontem"<br>
-Tom Zé
-:::
-
 ## Regularização como um limiar suave
 
 Até agora vimos exemplos de como a regularização pode ser vista como uma função de perda na estimação de mínimos quadrados. Essa ideia pode ser estendida para a estimação via máxima verossimilhança (como veremos adiante).
@@ -165,9 +157,6 @@ O algoritmo de @en_glm (que aqui simplificamos) faz uma validação cruzada para
 ## Estudo com dados simulados
 
 ```{r}
-#| message: false
-#| warning: false
-
 set.seed(12345)
 
 n = 200
@@ -648,7 +637,10 @@ cat("porcentagem dentro do envelope\n",
 )
 ```
 
+Voltando do exemplo de regressão linear com outlier (erros T-Student).
+
 ```{r}
+#| code-fold: true
 set.seed(12345)
 x = cbind(1, rnorm(20))
 e = rt(20, 1)
@@ -670,9 +662,10 @@ res_lasso = y - x %*% beta_lasso
 res_lm    = y - x %*% beta_lm
 ```
 
+
 ```{r}
-#| eval: false
 #| code-fold: true
+#| eval: false
 par(mfrow=c(1,2))
 qqnorm(res_lm, ylim = c(-10,10))
 qqnorm(res_lasso, ylim = c(-10,10))
@@ -721,7 +714,7 @@ Por fim, vale ressaltar que o bootstrap se faz necessário pois não sabemos qua
 ```{r}
 set.seed(12345)
 
-iter = 200
+iter = 400
 n = 200
 bloco = 10
 
@@ -766,14 +759,14 @@ for (i in 1:iter) {
 
 ```{r}
 #| code-fold: true
-#| fig-cap: "Variâncias dos betas do grupo 1 (significativos)"
+#| fig-cap: "Variâncias dos betas do grupo 1 (significativos), beta real em vermelho."
 
 plot_hist_block = function(idxs, xlims) {
   par(mfrow = c(2, 3))
   for (metodo in c("glm", "en")) {
     for (i in seq_along(idxs)) {
       beta_idx = idxs[i]
-      beta_number = beta_idx - 1   # como pedido
+      beta_number = beta_idx - 1
       
       hist(
         estimativas[metodo, beta_idx, ],
@@ -781,6 +774,7 @@ plot_hist_block = function(idxs, xlims) {
         xlab = "", ylab = "",
         xlim = xlims[[i]]
       )
+      abline(v = beta[idxs[i]], col = 2, lwd = 2)
     }
     
   }
@@ -794,7 +788,7 @@ plot_hist_block(
 
 ```{r}
 #| code-fold: true
-#| fig-cap: "Variâncias dos betas do grupo 2 (não significativos)"
+#| fig-cap: "Variâncias dos betas do grupo 2 (não significativos), beta real em vermelho."
 
 plot_hist_block(
   idxs = c(12, 14, 19),
@@ -804,7 +798,7 @@ plot_hist_block(
 
 ```{r}
 #| code-fold: true
-#| fig-cap: "Variâncias dos betas do grupo 3 (covariáveis autocorrelacionadas)"
+#| fig-cap: "Variâncias dos betas do grupo 3 (covariáveis autocorrelacionadas), beta real em vermelho."
 
 plot_hist_block(
   idxs = c(22, 23, 27),
@@ -819,8 +813,6 @@ No segundo bloco de covariáveis, ambos os modelos captam a insignificância rea
 No terceiro bloco de covariáveis - alta correlação das covariáveis e apenas o $\beta_{21}$ realmente diferente de zero -, ambos os modelos captam qual é a covariável significativa, mas - pelo menos nas variáveis não siginificativas - as estimativas do elastic net são menos dispersas que as do IRLS tradicional.
 
 ```{r}
-#| warning: false
-#| message: false
 #| fig-width:  10
 #| fig-height: 5
 #| code-fold: true
@@ -854,8 +846,6 @@ Os boxplots acima refletem o que já dissemos. As variabilidade das estimativas 
 Nesse plot foi ignorado o intercepto.
 
 ```{r}
-#| warning: false
-#| message: false
 #| fig-width:  10
 #| fig-height: 5
 #| code-fold: true
@@ -887,8 +877,6 @@ ggplot(vies2_long,
 O gráfico de boxplots acima mostra como os dois modelos se comportam em termos de viés ao quadrado. É possível notar que o viés da estatística EN é mais enviesada que a estatística tradicional no grupo com coeficientes diferentes de zero.
 
 ```{r}
-#| warning: false
-#| message: false
 #| fig-width:  10
 #| fig-height: 5
 #| code-fold: true
@@ -910,9 +898,52 @@ norma =
   dplyr::mutate(iter = as.integer(iter))
 
 ggplot(norma,
-       aes(x = metodo, y = valor, fill = norma)) +
+       aes(x = norma, y = valor, fill = metodo)) +
   geom_boxplot(alpha = 0.7) +
-  labs(x = "Método", y = "Norma",
+  labs(x = "Tipo de norma", y = "Norma",
        title = "Norma dos Betas (ao longo das iterações bootstrap)") +
   theme_minimal(base_size = 14)
 ```
+
+Como esperado, as normas de beta (em cada iteração e excluído o intercepto) são, em geral, menores na regressão EN comparado com o MLE.
+
+```{r}
+#| code-fold: true
+
+library(dplyr)
+library(tidyr)
+
+significancia =
+  estimativas |>
+  apply(c(1,2),
+        function(x) {q = quantile(x, probs = c(.025, .975)); 0 > q[1] & 0 < q[2]}
+        ) |>
+  rbind("real" = beta == 0) |>
+  t() |>
+  {\(.) !.[,c(3,1,2)]}() |>
+  tibble::as_tibble()
+
+significancia_long=
+  significancia |>
+  mutate(sim = row_number()) |>
+  pivot_longer(-sim, names_to = "modelo", values_to = "sig") |>
+  mutate(sim = sim - 1)
+
+ggplot(significancia_long, aes(x = modelo, y = sim, fill = sig)) +
+  geom_tile(color = "white") +
+  scale_fill_manual(
+    values = c(`TRUE` = "darkgreen", `FALSE` = "red"),
+    labels = c("Não significativo", "Significativo")
+  ) +
+  scale_y_reverse() +
+  labs(x = "Modelo", y = "Beta", fill = "") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 270, hjust = 1),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  coord_equal()
+
+```
+Acima temos uma pseudo-significância dos estimadores.
