@@ -245,7 +245,7 @@ window.Quarto = {
   <li><a href="#estudo-com-dados-simulados" id="toc-estudo-com-dados-simulados" class="nav-link" data-scroll-target="#estudo-com-dados-simulados"><span class="header-section-number">2.4</span> Estudo com dados simulados</a>
   <ul class="collapse">
   <li><a href="#lidando-com-outliers" id="toc-lidando-com-outliers" class="nav-link" data-scroll-target="#lidando-com-outliers"><span class="header-section-number">2.4.1</span> Lidando com outliers</a></li>
-  <li><a href="#análise-de-resíduos---parte-1" id="toc-análise-de-resíduos---parte-1" class="nav-link" data-scroll-target="#análise-de-resíduos---parte-1"><span class="header-section-number">2.4.2</span> Análise de resíduos - parte 1</a></li>
+  <li><a href="#análise-de-resíduos" id="toc-análise-de-resíduos" class="nav-link" data-scroll-target="#análise-de-resíduos"><span class="header-section-number">2.4.2</span> Análise de resíduos</a></li>
   <li><a href="#monte-carlo" id="toc-monte-carlo" class="nav-link" data-scroll-target="#monte-carlo"><span class="header-section-number">2.4.3</span> Monte Carlo</a></li>
   </ul></li>
   </ul>
@@ -1023,8 +1023,8 @@ t2* 5.723713 0.25242782    3.843777</code></pre>
 </div>
 <p>É possível notar que o EMQ é fortemente impactado pela presença do outlier, que afeta não só a estimação pontual dos parâmetros como sua significância no modelo. Coisa parecida ocorre quando usamos o bootstrap para estimar os coeficientes de regressão. Apesar disso, a regressão lasso produz estimativas razoáveis.</p>
 </section>
-<section id="análise-de-resíduos---parte-1" class="level3" data-number="2.4.2">
-<h3 data-number="2.4.2" class="anchored" data-anchor-id="análise-de-resíduos---parte-1"><span class="header-section-number">2.4.2</span> Análise de resíduos - parte 1</h3>
+<section id="análise-de-resíduos" class="level3" data-number="2.4.2">
+<h3 data-number="2.4.2" class="anchored" data-anchor-id="análise-de-resíduos"><span class="header-section-number">2.4.2</span> Análise de resíduos</h3>
 <p>É razoável que uma mudança na estimação dos coeficientes mude também a distribuição dos resíduos.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>beta_en  <span class="ot">=</span> <span class="fu">estimativa_en</span>(Y, X, <span class="at">alpha =</span> <span class="fl">0.9</span>, <span class="at">lambda =</span> cv<span class="sc">$</span>lambda<span class="fl">.1</span>se)</span>
@@ -1064,17 +1064,16 @@ t2* 5.723713 0.25242782    3.843777</code></pre>
 <span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (b <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>B) {</span>
 <span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>  Yb <span class="ot">=</span> <span class="fu">rpois</span>(<span class="fu">length</span>(Y), <span class="fu">exp</span>(X <span class="sc">%*%</span> beta_en))</span>
 <span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>  beta_b <span class="ot">=</span> <span class="fu">estimativa_en</span>(Yb, X, <span class="at">alpha =</span> <span class="fl">0.9</span>, <span class="at">lambda =</span> cv<span class="sc">$</span>lambda<span class="fl">.1</span>se, <span class="at">iter =</span> <span class="dv">10</span>, <span class="at">init =</span> beta_en)</span>
-<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>  <span class="co">#beta_b = estimativa_en(Yb, X, alpha = 0.9, lambda = cv$lambda.1se)</span></span>
-<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>  res_boot_en[b,] <span class="ot">=</span> ( Yb <span class="sc">-</span> <span class="fu">exp</span>(X <span class="sc">%*%</span> beta_b) ) <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="fu">exp</span>(X <span class="sc">%*%</span> beta_b))</span>
-<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>envelope_en <span class="ot">=</span></span>
-<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>  res_boot_en <span class="sc">|&gt;</span></span>
-<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">apply</span>(<span class="dv">2</span>,</span>
-<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a>        \(col) <span class="fu">quantile</span>(col, <span class="at">probs =</span> <span class="fu">c</span>(<span class="fl">0.05</span>, <span class="fl">0.95</span>), <span class="at">na.rm =</span> T)</span>
-<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
-<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t</span>()</span>
-<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-32"><a href="#cb24-32" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(<span class="fu">list</span>(<span class="st">"glm"</span> <span class="ot">=</span> envelope_glm, <span class="st">"en"</span> <span class="ot">=</span> envelope_en), <span class="st">"../data/envelopes.rds"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>  res_boot_en[b,] <span class="ot">=</span> ( Yb <span class="sc">-</span> <span class="fu">exp</span>(X <span class="sc">%*%</span> beta_b) ) <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="fu">exp</span>(X <span class="sc">%*%</span> beta_b))</span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>envelope_en <span class="ot">=</span></span>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>  res_boot_en <span class="sc">|&gt;</span></span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">apply</span>(<span class="dv">2</span>,</span>
+<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>        \(col) <span class="fu">quantile</span>(col, <span class="at">probs =</span> <span class="fu">c</span>(<span class="fl">0.05</span>, <span class="fl">0.95</span>), <span class="at">na.rm =</span> T)</span>
+<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
+<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t</span>()</span>
+<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(<span class="fu">list</span>(<span class="st">"glm"</span> <span class="ot">=</span> envelope_glm, <span class="st">"en"</span> <span class="ot">=</span> envelope_en), <span class="st">"../data/envelopes.rds"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
 <details class="code-fold">

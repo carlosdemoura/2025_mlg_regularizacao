@@ -488,7 +488,7 @@ Apesar disso, a regressão lasso produz estimativas razoáveis.
 
 
 
-### Análise de resíduos - parte 1
+### Análise de resíduos
 
 É razoável que uma mudança na estimação dos coeficientes mude também a distribuição dos resíduos.
 
@@ -558,7 +558,6 @@ res_boot_en = matrix(nrow = B, ncol = length(Y))
 for (b in 1:B) {
   Yb = rpois(length(Y), exp(X %*% beta_en))
   beta_b = estimativa_en(Yb, X, alpha = 0.9, lambda = cv$lambda.1se, iter = 10, init = beta_en)
-  #beta_b = estimativa_en(Yb, X, alpha = 0.9, lambda = cv$lambda.1se)
   res_boot_en[b,] = ( Yb - exp(X %*% beta_b) ) / sqrt(exp(X %*% beta_b))
 }
 envelope_en =

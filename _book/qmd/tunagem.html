@@ -290,7 +290,7 @@ window.Quarto = {
 <p>Outros pacotes podem ser usados para ajustar regularizações em GLMs, cada um com suas particularidades. O <code>glmnet</code>, por exemplo, é um dos poucos pacotes que permitem a implementação em qualquer família de GLMs, mas o pacote não é compatível com a sintaxe de fórmulas do R. Uma série de alternativas ao <code>glmnet</code> são apresentadas em <span class="citation" data-cites="en_glm">Tay, Narasimhan, &amp; Hastie (<a href="referências.html#ref-en_glm" role="doc-biblioref">2023</a>)</span>.</p>
 </div>
 </div>
-<p>Considere a penalidade do elastic net</p>
+<p>Considere a penalidade do elastic net do pacote <code>glmnet</code>.</p>
 <p><span class="math display">\[
 P_{\alpha, \lambda}(\beta) =
 \lambda \left( \frac{1 - \alpha}{2}  \sum_{j=1}^p \beta_j^2 + \alpha\sum_{j=1}^p |\beta_j| \right).
@@ -378,7 +378,7 @@ P_{\alpha, \lambda}(\beta) =
 <p>É possível aplicar ideias de validação cruzada (que serão apresentadas adiante para a escolha de <span class="math inline">\(\lambda\)</span>) para escolher o melhor <span class="math inline">\(\alpha\)</span>, mas em geral esse valor pode ser fixado pelo pesquisador de acordo com o tipo de problema. Vide os casos extremos abaixo de regressão lasso e ridge.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glmnet)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">glmnet</span>(X, Y, <span class="at">alpha =</span> <span class="dv">1</span>, <span class="at">family =</span> <span class="st">"poisson"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">glmnet</span>(X[,<span class="sc">-</span><span class="dv">1</span>], Y, <span class="at">alpha =</span> <span class="dv">0</span>, <span class="at">family =</span> <span class="st">"poisson"</span>)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(fit)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
@@ -389,7 +389,7 @@ P_{\alpha, \lambda}(\beta) =
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">glmnet</span>(X, Y, <span class="at">alpha =</span> <span class="dv">0</span>, <span class="at">family =</span> <span class="st">"poisson"</span>)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">glmnet</span>(X[,<span class="sc">-</span><span class="dv">1</span>], Y, <span class="at">alpha =</span> <span class="dv">1</span>, <span class="at">family =</span> <span class="st">"poisson"</span>)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(fit)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
@@ -399,56 +399,76 @@ P_{\alpha, \lambda}(\beta) =
 </div>
 </div>
 </div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">glmnet</span>(X[,<span class="sc">-</span><span class="dv">1</span>], Y, <span class="at">alpha =</span> <span class="dv">1</span>, <span class="at">family =</span> <span class="st">"poisson"</span>, <span class="at">nlambda =</span> <span class="dv">10</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(fit)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:  glmnet(x = X[, -1], y = Y, family = "poisson", alpha = 1, nlambda = 10) 
+
+   Df  %Dev  Lambda
+1   0  0.00 1.53000
+2   6 56.36 0.54980
+3   8 73.02 0.19760
+4  12 76.45 0.07101
+5  13 77.00 0.02552
+6  14 77.10 0.00917
+7  14 77.11 0.00330
+8  15 77.11 0.00118
+9  15 77.11 0.00043
+10 15 77.12 0.00015</code></pre>
+</div>
+</div>
 <p>Lambda pode ser selecionado como aquele que dá um modelo com um número pré-selecionado de covariáveis. Outra possibilidade (mais comum) é selecionar o <span class="math inline">\(\lambda\)</span> que minimiza o erro quadrático médio.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>cvfit <span class="ot">=</span> <span class="fu">cv.glmnet</span>(X[<span class="dv">1</span><span class="sc">:</span><span class="dv">200</span>,], Y[<span class="dv">1</span><span class="sc">:</span><span class="dv">200</span>], <span class="at">family =</span> <span class="st">"poisson"</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(cvfit)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>cvfit <span class="ot">=</span> <span class="fu">cv.glmnet</span>(X[<span class="dv">1</span><span class="sc">:</span><span class="dv">200</span>,<span class="sc">-</span><span class="dv">1</span>], Y[<span class="dv">1</span><span class="sc">:</span><span class="dv">200</span>], <span class="at">family =</span> <span class="st">"poisson"</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(cvfit)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="tunagem_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="tunagem_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>O EQM é calculado usado o K-fold cross-validation - mais sobre isso pode ser visto no capítulo 10 de <span class="citation" data-cites="tmwr">Kuhn &amp; Silge (<a href="referências.html#ref-tmwr" role="doc-biblioref">2022</a>)</span>. Grosso modo, os dados são divididos em <span class="math inline">\(K\)</span> subconjuntos de igual tamanho (default <span class="math inline">\(K = 10\)</span>) e para cada <span class="math inline">\(\lambda\)</span> no caminho de lambdas e <span class="math inline">\(k' \in 1:K\)</span> faça:</p>
+<p>O EQM é calculado usado o K-fold cross-validation - mais sobre isso pode ser visto no capítulo 10 de <span class="citation" data-cites="tmwr">Kuhn &amp; Silge (<a href="referências.html#ref-tmwr" role="doc-biblioref">2022</a>)</span>. Grosso modo, os dados são divididos em <span class="math inline">\(K\)</span> subconjuntos de igual tamanho (default <span class="math inline">\(K = 10\)</span>) e para cada <span class="math inline">\(\lambda'\)</span> no caminho de lambdas e <span class="math inline">\(k' \in 1:K\)</span> faça:</p>
 <ol type="1">
 <li>Ajuste o modelo com os <span class="math inline">\(K-1\)</span> outros subconjuntos;</li>
 <li>Preveja o os valores do subconjunto <span class="math inline">\(k'\)</span> a partir dos coeficientes obtidos;</li>
 <li>Calcule o EQM nesse subconkunto que ficou de fora.</li>
 </ol>
-<p>O EQM de <span class="math inline">\(\lambda'\)</span> será a média do EQM dos <span class="math inline">\(K\)</span> subconjuntos.</p>
+<p>O EQM de <span class="math inline">\(\lambda'\)</span> será o EQM dos <span class="math inline">\(K\)</span> subconjuntos.</p>
 <p>As linhas verticais pontilhadas trazem valores especiais de <span class="math inline">\(\lambda\)</span>. <code>lambda.min</code> é o valor de <span class="math inline">\(\lambda\)</span> que dá o modelo com menor EQM. Com isso, o programa calcula <code>lambda.1se</code>, o <span class="math inline">\(\lambda\)</span> que está um desvio padrão acima de <code>lambda.min</code>. Isso permite que o modelo cresça ao máximo as estimativas dos betas sem crescer muito o MSE.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cvfit<span class="sc">$</span>lambda.min</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>cvfit<span class="sc">$</span>lambda.min</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.04464306</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>cvfit<span class="sc">$</span>lambda<span class="fl">.1</span>se</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>cvfit<span class="sc">$</span>lambda<span class="fl">.1</span>se</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.1642141</code></pre>
 </div>
 </div>
 <p>A predição de novos valores é feita por meio da função <code>predict</code>.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>X_new <span class="ot">=</span> <span class="fu">predict</span>(cvfit, <span class="at">newx =</span> X[<span class="dv">201</span><span class="sc">:</span><span class="dv">250</span>,], <span class="at">s =</span> <span class="st">"lambda.1se"</span>, <span class="at">type =</span> <span class="st">"response"</span>)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">cbind</span>(X_new, Y[<span class="dv">201</span><span class="sc">:</span><span class="dv">250</span>]))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>X_new <span class="ot">=</span> <span class="fu">predict</span>(cvfit, <span class="at">newx =</span> X[<span class="dv">201</span><span class="sc">:</span><span class="dv">250</span>,<span class="sc">-</span><span class="dv">1</span>], <span class="at">s =</span> <span class="st">"lambda.1se"</span>, <span class="at">type =</span> <span class="st">"response"</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">cbind</span>(X_new, <span class="st">"real"</span> <span class="ot">=</span> Y[<span class="dv">201</span><span class="sc">:</span><span class="dv">250</span>]))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>     lambda.1se   
-[1,] 12.4055827 20
-[2,]  1.3814449  2
-[3,]  1.1193229  2
-[4,]  1.5140474  1
-[5,]  0.3706630  0
-[6,]  0.6943404  2</code></pre>
+<pre><code>     lambda.1se real
+[1,] 12.4055827   20
+[2,]  1.3814449    2
+[3,]  1.1193229    2
+[4,]  1.5140474    1
+[5,]  0.3706630    0
+[6,]  0.6943404    2</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">cbind</span>(X_new, Y[<span class="dv">201</span><span class="sc">:</span><span class="dv">250</span>]))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">cbind</span>(X_new, <span class="st">"real"</span> <span class="ot">=</span> Y[<span class="dv">201</span><span class="sc">:</span><span class="dv">250</span>]))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="tunagem_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="tunagem_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -464,6 +484,59 @@ P_{\alpha, \lambda}(\beta) =
 </div>
 <div class="callout-body-container callout-body">
 <p>No R, um objeto do tipo <code>sparse matrix</code> aparece como saída do <code>glmnet</code> e é, em geral, uma matriz da classe <code>dgCMatrix</code> do pacote <code>Matrix</code>. Nesse formato, apenas os coeficientes não nulos são armazenados, o que otimiza operações de produto matricial e norma das colunas.</p>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(cvfit) <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>6 x 1 sparse Matrix of class "dgCMatrix"
+            lambda.1se
+(Intercept)  0.2452493
+V1          -0.2790796
+V2          -0.4391278
+V3           0.1747526
+V4          -0.5832768
+V5           .        </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cbind</span>(<span class="fu">coef</span>(cvfit), beta)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>16 x 2 sparse Matrix of class "dgCMatrix"
+            lambda.1se       beta
+(Intercept)  0.2452493  0.1000000
+V1          -0.2790796 -0.4467503
+V2          -0.4391278 -0.4356943
+V3           0.1747526  0.3178050
+V4          -0.5832768 -0.6571246
+V5           .          0.1185335
+V6           .          .        
+V7           .          .        
+V8           .          .        
+V9           .          .        
+V10          0.0441987  .        
+V11          0.2294519  0.6000000
+V12          0.2177508  .        
+V13          .          .        
+V14          .          .        
+V15          .          .        </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cbind</span>(<span class="fu">coef</span>(cvfit), beta) <span class="sc">|&gt;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.matrix</span>() <span class="sc">|&gt;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">8</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            lambda.1se       beta
+(Intercept)  0.2452493  0.1000000
+V1          -0.2790796 -0.4467503
+V2          -0.4391278 -0.4356943
+V3           0.1747526  0.3178050
+V4          -0.5832768 -0.6571246
+V5           0.0000000  0.1185335
+V6           0.0000000  0.0000000
+V7           0.0000000  0.0000000</code></pre>
 </div>
 </div>
 

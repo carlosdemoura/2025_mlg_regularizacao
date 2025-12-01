@@ -14,7 +14,7 @@ Uma vez que já apresentamos os principais passos do IRLS-EN, doravante usaremos
 Outros pacotes podem ser usados para ajustar regularizações em GLMs, cada um com suas particularidades. O `glmnet`, por exemplo, é um dos poucos pacotes que permitem a implementação em qualquer família de GLMs, mas o pacote não é compatível com a sintaxe de fórmulas do R. Uma série de alternativas ao `glmnet` são apresentadas em @en_glm.
 :::
 
-Considere a penalidade do elastic net
+Considere a penalidade do elastic net do pacote `glmnet`.
 
 $$
 P_{\alpha, \lambda}(\beta) = 
@@ -115,29 +115,34 @@ Y = rpois(n, eta)
 
 ```{r}
 library(glmnet)
-fit = glmnet(X, Y, alpha = 1, family = "poisson")
+fit = glmnet(X[,-1], Y, alpha = 0, family = "poisson")
 plot(fit)
 ```
 
 ```{r}
-fit = glmnet(X, Y, alpha = 0, family = "poisson")
+fit = glmnet(X[,-1], Y, alpha = 1, family = "poisson")
 plot(fit)
+```
+
+```{r}
+fit = glmnet(X[,-1], Y, alpha = 1, family = "poisson", nlambda = 10)
+print(fit)
 ```
 
 Lambda pode ser selecionado como aquele que dá um modelo com um número pré-selecionado de covariáveis. Outra possibilidade (mais comum) é selecionar o $\lambda$ que minimiza o erro quadrático médio.
 
 ```{r}
-cvfit = cv.glmnet(X[1:200,], Y[1:200], family = "poisson")
+cvfit = cv.glmnet(X[1:200,-1], Y[1:200], family = "poisson")
 plot(cvfit)
 ```
 
-O EQM é calculado usado o K-fold cross-validation - mais sobre isso pode ser visto no capítulo 10 de @tmwr. Grosso modo, os dados são divididos em $K$ subconjuntos de igual tamanho (default $K = 10$) e para cada $\lambda$ no caminho de lambdas e $k' \in 1:K$ faça:
+O EQM é calculado usado o K-fold cross-validation - mais sobre isso pode ser visto no capítulo 10 de @tmwr. Grosso modo, os dados são divididos em $K$ subconjuntos de igual tamanho (default $K = 10$) e para cada $\lambda'$ no caminho de lambdas e $k' \in 1:K$ faça:
 
 1. Ajuste o modelo com os $K-1$ outros subconjuntos;
 2. Preveja o os valores do subconjunto $k'$ a partir dos coeficientes obtidos;
 3. Calcule o EQM nesse subconkunto que ficou de fora.
 
-O EQM de $\lambda'$ será a média do EQM dos $K$ subconjuntos.
+O EQM de $\lambda'$ será o EQM dos $K$ subconjuntos.
 
 As linhas verticais pontilhadas trazem valores especiais de $\lambda$. `lambda.min` é o valor de $\lambda$ que dá o modelo com menor EQM. Com isso, o programa calcula `lambda.1se`, o $\lambda$ que está um desvio padrão acima de `lambda.min`. Isso permite que o modelo cresça ao máximo as estimativas dos betas sem crescer muito o MSE.
 
@@ -149,12 +154,12 @@ cvfit$lambda.1se
 A predição de novos valores é feita por meio da função `predict`.
 
 ```{r}
-X_new = predict(cvfit, newx = X[201:250,], s = "lambda.1se", type = "response")
-head(cbind(X_new, Y[201:250]))
+X_new = predict(cvfit, newx = X[201:250,-1], s = "lambda.1se", type = "response")
+head(cbind(X_new, "real" = Y[201:250]))
 ```
 
 ```{r}
-plot(cbind(X_new, Y[201:250]))
+plot(cbind(X_new, "real" = Y[201:250]))
 ```
 
 ::: {.callout-tip}
@@ -162,3 +167,18 @@ plot(cbind(X_new, Y[201:250]))
 
 No R, um objeto do tipo `sparse matrix` aparece como saída do `glmnet` e é, em geral, uma matriz da classe `dgCMatrix` do pacote `Matrix`. Nesse formato, apenas os coeficientes não nulos são armazenados, o que otimiza operações de produto matricial e norma das colunas.
 :::
+
+```{r}
+coef(cvfit) |>
+  head()
+```
+
+```{r}
+cbind(coef(cvfit), beta)
+```
+
+```{r}
+cbind(coef(cvfit), beta) |>
+  as.matrix() |>
+  head(8)
+```
