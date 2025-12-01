@@ -246,7 +246,7 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#lidando-com-outliers" id="toc-lidando-com-outliers" class="nav-link" data-scroll-target="#lidando-com-outliers"><span class="header-section-number">2.4.1</span> Lidando com outliers</a></li>
   <li><a href="#análise-de-resíduos---parte-1" id="toc-análise-de-resíduos---parte-1" class="nav-link" data-scroll-target="#análise-de-resíduos---parte-1"><span class="header-section-number">2.4.2</span> Análise de resíduos - parte 1</a></li>
-  <li><a href="#bootstrap" id="toc-bootstrap" class="nav-link" data-scroll-target="#bootstrap"><span class="header-section-number">2.4.3</span> Bootstrap</a></li>
+  <li><a href="#monte-carlo" id="toc-monte-carlo" class="nav-link" data-scroll-target="#monte-carlo"><span class="header-section-number">2.4.3</span> Monte Carlo</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -835,7 +835,7 @@ Dica
 </table>
 </div>
 </div>
-<p>Nos primeiro grupo (betas reais não nulos e covariáveis independentes), tanto o <code>glm</code> quanto o EN recuperam bem tanto os sinais quanto as magnitudes dos betas reais e podemos ver bem a ocorrência da <em>shrinkage</em>. Já no segundo bloco (betas reais nulos e covariáveis independentes), a EN se destaca ao manter as estimativas próximas de zero, enquanto o <code>glm</code> frequentemente gera pequenos falsos positivos. Finalmente, no terceiro bloco (betas reais não nulos e covariáveis fortemente dependentes), oEN novamente aplica <em>shrinkage</em> forte nos coeficientes irrelevantes, enquanto o <code>glm</code> tem maior dificuldade em lidar com a colinearidade.</p>
+<p>Nos primeiro grupo (betas reais não nulos e covariáveis independentes), tanto o <code>glm</code> quanto o EN recuperam bem tanto os sinais quanto as magnitudes dos betas reais e podemos ver bem a ocorrência da <em>shrinkage</em>. Já no segundo bloco (betas reais nulos e covariáveis independentes), a EN se destaca ao manter as estimativas próximas de zero, enquanto o <code>glm</code> frequentemente gera pequenos falsos positivos. Finalmente, no terceiro bloco (betas reais não nulos e covariáveis fortemente dependentes), o EN novamente aplica <em>shrinkage</em> forte nos coeficientes irrelevantes, enquanto o <code>glm</code> tem maior dificuldade em lidar com a colinearidade.</p>
 <section id="lidando-com-outliers" class="level3" data-number="2.4.1">
 <h3 data-number="2.4.1" class="anchored" data-anchor-id="lidando-com-outliers"><span class="header-section-number">2.4.1</span> Lidando com outliers</h3>
 <p>Os dados acima foram gerados com uma certa poluição de outliers, como podemos ver nos gráficos abaixo.</p>
@@ -868,7 +868,16 @@ Dica
 <span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(x_seq, y_hat_com_outlier, <span class="at">col =</span> <span class="st">"red"</span>,  <span class="at">lwd =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p><img class="flip" src="../img/tmp/pois1.png" data-src1="../img/tmp/pois1.png" data-src2="../img/tmp/pois2.png" width="400" height="500" onclick="trocaImagem(this)"></p>
+<div id="fig-a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<p><img class="flip figure-img" src="../img/tmp/pois1.png" data-src1="../img/tmp/pois1.png" data-src2="../img/tmp/pois2.png" width="400" height="500" onclick="trocaImagem(this)"></p>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;2.1: Predição do <code>glm</code> com outliers (linha vermelha) vs.&nbsp;sem outliers (linha azul). Outliers inseridos intencionalmente marcados com um x vermelho.
+</figcaption>
+</figure>
+</div>
 <p>Quando estimamos usando a função <code>glm</code>, a estimativa do coeficiente da covariável 12 no modelo com os outliers é de -0.095, já no modelo sem outliers essa estimativa passa a ser de -0.002. Além disso, esse coeficiente (originalmente nulo) tornou-se siginificativo com a inclusão dos outliers. Já na estimação EN, a estimativa pontual é 0.013, o que é mais razoável que a estimativa do <code>glm</code> com outliers (o único que temos acesso). Embora isso não indique se a variável é significativa (segundo a métrica EN), isso produz um modelo mais parcimonioso que o IRLS tradicional</p>
 <p>Podemos ver abaixo um exemplo mais comovente sobre o poder da regularização na contenção do efeito de outliers.</p>
 <div class="cell">
@@ -1132,9 +1141,9 @@ MLE  87.5</code></pre>
 </div>
 <p><img class="flip" src="../img/tmp/env31.png" data-src1="../img/tmp/env31.png" data-src2="../img/tmp/env32.png" width="800" height="400" onclick="trocaImagem(this)"></p>
 </section>
-<section id="bootstrap" class="level3" data-number="2.4.3">
-<h3 data-number="2.4.3" class="anchored" data-anchor-id="bootstrap"><span class="header-section-number">2.4.3</span> Bootstrap</h3>
-<p>Como um exemplo computaciona, optamos por fazer um bootstrap paramétrico a fim de entender o comportamento dos estimadores tradicional (IRLS via <code>glm</code>) e regularizado (IRLS-EN adaptado de <span class="citation" data-cites="en_glm">Tay et al. (<a href="referências.html#ref-en_glm" role="doc-biblioref">2023</a>)</span>). Opatamos por manter a mesma configuração de blocos e parâmetros descrita anteriormente. Poderiamos ter considerando a aleatoriedade das covariáveis no processo (dentro das especificações anteriores) - o que pode ser feito simplesmente passando o sorteio dos xizes para dentro do loop -, mas vimos que isso produziu um resultado similar ao com <span class="math inline">\(X\)</span> fixado (só um pouco menos dramático).</p>
+<section id="monte-carlo" class="level3" data-number="2.4.3">
+<h3 data-number="2.4.3" class="anchored" data-anchor-id="monte-carlo"><span class="header-section-number">2.4.3</span> Monte Carlo</h3>
+<p>Como um exemplo computacional, optamos por fazer um estudo de Monte Carlo a fim de entender o comportamento dos estimadores tradicional (IRLS via <code>glm</code>) e regularizado (IRLS-EN adaptado de <span class="citation" data-cites="en_glm">Tay et al. (<a href="referências.html#ref-en_glm" role="doc-biblioref">2023</a>)</span>). Optamos por manter a mesma configuração de blocos e parâmetros descrita anteriormente e usar quantidades fixas para beta. Poderiamos ter considerando a aleatoriedade das covariáveis no processo (dentro das especificações anteriores) - o que pode ser feito simplesmente passando o sorteio dos xizes para dentro do loop -, mas vimos que isso produziu um resultado similar ao com <span class="math inline">\(X\)</span> fixado (só um pouco menos dramático).</p>
 <p>Seria interessante também fazer um estudo Monte Carlo, sorteando diferentes betas dentro da mesma estrutura e diferentes xizes para cada iteração Monte Carlo. Convidamos o leitor a fazer isso em seu tempo livre.</p>
 <p>Por fim, vale ressaltar que o bootstrap se faz necessário pois não sabemos qual é a distribuição analítica nem dos betas estimados via IRLS nem dos estimados via IRLS-EN.</p>
 <div class="cell">
@@ -1361,53 +1370,9 @@ MLE  87.5</code></pre>
 </div>
 </div>
 <p>Como esperado, as normas de beta (em cada iteração e excluído o intercepto) são, em geral, menores na regressão EN comparado com o MLE.</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Código</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>significancia <span class="ot">=</span></span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  estimativas <span class="sc">|&gt;</span></span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">apply</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>),</span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">function</span>(x) {q <span class="ot">=</span> <span class="fu">quantile</span>(x, <span class="at">probs =</span> <span class="fu">c</span>(.<span class="dv">025</span>, .<span class="dv">975</span>)); <span class="dv">0</span> <span class="sc">&gt;</span> q[<span class="dv">1</span>] <span class="sc">&amp;</span> <span class="dv">0</span> <span class="sc">&lt;</span> q[<span class="dv">2</span>]}</span>
-<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>        ) <span class="sc">|&gt;</span></span>
-<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rbind</span>(<span class="st">"real"</span> <span class="ot">=</span> beta <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
-<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t</span>() <span class="sc">|&gt;</span></span>
-<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>  {\(.) <span class="sc">!</span>.[,<span class="fu">c</span>(<span class="dv">3</span>,<span class="dv">1</span>,<span class="dv">2</span>)]}() <span class="sc">|&gt;</span></span>
-<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">as_tibble</span>()</span>
-<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>significancia_long<span class="ot">=</span></span>
-<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>  significancia <span class="sc">|&gt;</span></span>
-<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sim =</span> <span class="fu">row_number</span>()) <span class="sc">|&gt;</span></span>
-<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="sc">-</span>sim, <span class="at">names_to =</span> <span class="st">"modelo"</span>, <span class="at">values_to =</span> <span class="st">"sig"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sim =</span> sim <span class="sc">-</span> <span class="dv">1</span>)</span>
-<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(significancia_long, <span class="fu">aes</span>(<span class="at">x =</span> modelo, <span class="at">y =</span> sim, <span class="at">fill =</span> sig)) <span class="sc">+</span></span>
-<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>(<span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
-<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(</span>
-<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">values =</span> <span class="fu">c</span>(<span class="st">`</span><span class="at">TRUE</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"darkgreen"</span>, <span class="st">`</span><span class="at">FALSE</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"red"</span>),</span>
-<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Não significativo"</span>, <span class="st">"Significativo"</span>)</span>
-<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_reverse</span>() <span class="sc">+</span></span>
-<span id="cb37-27"><a href="#cb37-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Modelo"</span>, <span class="at">y =</span> <span class="st">"Beta"</span>, <span class="at">fill =</span> <span class="st">""</span>) <span class="sc">+</span></span>
-<span id="cb37-28"><a href="#cb37-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb37-29"><a href="#cb37-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
-<span id="cb37-30"><a href="#cb37-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">270</span>, <span class="at">hjust =</span> <span class="dv">1</span>),</span>
-<span id="cb37-31"><a href="#cb37-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.major =</span> <span class="fu">element_blank</span>(),</span>
-<span id="cb37-32"><a href="#cb37-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>()</span>
-<span id="cb37-33"><a href="#cb37-33" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb37-34"><a href="#cb37-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_equal</span>()</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="estimação_files/figure-html/unnamed-chunk-36-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>Acima temos uma pseudo-significância dos estimadores.</p>
+<!--
+Acima temos uma pseudo-significância dos estimadores.
+-->
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list" style="display: none">

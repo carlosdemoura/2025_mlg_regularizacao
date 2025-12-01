@@ -280,7 +280,7 @@ estimativas[21:30+1,] |>
     caption = "Estimativas vs. real\n(originalmente só o 1º significativo e com covariáveis correlacionadas)")
 ```
 
-Nos primeiro grupo (betas reais não nulos e covariáveis independentes), tanto o `glm` quanto o EN recuperam bem tanto os sinais quanto as magnitudes dos betas reais e podemos ver bem a ocorrência da _shrinkage_. Já no segundo bloco (betas reais nulos e covariáveis independentes), a EN se destaca ao manter as estimativas próximas de zero, enquanto o `glm` frequentemente gera pequenos falsos positivos. Finalmente, no terceiro bloco (betas reais não nulos e covariáveis fortemente dependentes), oEN novamente aplica _shrinkage_ forte nos coeficientes irrelevantes, enquanto o `glm` tem maior dificuldade em lidar com a colinearidade.
+Nos primeiro grupo (betas reais não nulos e covariáveis independentes), tanto o `glm` quanto o EN recuperam bem tanto os sinais quanto as magnitudes dos betas reais e podemos ver bem a ocorrência da _shrinkage_. Já no segundo bloco (betas reais nulos e covariáveis independentes), a EN se destaca ao manter as estimativas próximas de zero, enquanto o `glm` frequentemente gera pequenos falsos positivos. Finalmente, no terceiro bloco (betas reais não nulos e covariáveis fortemente dependentes), o EN novamente aplica _shrinkage_ forte nos coeficientes irrelevantes, enquanto o `glm` tem maior dificuldade em lidar com a colinearidade.
 
 
 
@@ -291,7 +291,6 @@ Os dados acima foram gerados com uma certa poluição de outliers, como podemos 
 
 ```{r}
 #| code-fold: true
-#| fig-cap: "Predição do `glm` com outliers (linha vermelha) vs. sem outliers (linha azul). Outliers inseridos intencionalmente marcados com um x vermelho."
 #| eval: false
 
 mod_sem_outliers = glm(Y~., data = df[-index_outliers,], family = poisson())
@@ -369,12 +368,16 @@ lines(x_seq, y_hat_com_outlier, col = "red",  lwd = 2)
 dev.off()
 ```
 
+::: {#fig-a}
 <img class="flip"
      src="../img/tmp/pois1.png"
      data-src1="../img/tmp/pois1.png"
      data-src2="../img/tmp/pois2.png"
      width="400" height="500"
      onclick="trocaImagem(this)">
+     
+Predição do `glm` com outliers (linha vermelha) vs. sem outliers (linha azul). Outliers inseridos intencionalmente marcados com um x vermelho.
+:::
 
 
 
@@ -702,10 +705,10 @@ dev.off()
 
 
 
-### Bootstrap
+### Monte Carlo
 
-Como um exemplo computaciona, optamos por fazer um bootstrap paramétrico a fim de entender o comportamento dos estimadores tradicional (IRLS via `glm`) e regularizado (IRLS-EN adaptado de @en_glm).
-Opatamos por manter a mesma configuração de blocos e parâmetros descrita anteriormente. Poderiamos ter considerando a aleatoriedade das covariáveis no processo (dentro das especificações anteriores) - o que pode ser feito simplesmente passando o sorteio dos xizes para dentro do loop -, mas vimos que isso produziu um resultado similar ao com $X$ fixado (só um pouco menos dramático).
+Como um exemplo computacional, optamos por fazer um estudo de Monte Carlo a fim de entender o comportamento dos estimadores tradicional (IRLS via `glm`) e regularizado (IRLS-EN adaptado de @en_glm).
+Optamos por manter a mesma configuração de blocos e parâmetros descrita anteriormente e usar quantidades fixas para beta. Poderiamos ter considerando a aleatoriedade das covariáveis no processo (dentro das especificações anteriores) - o que pode ser feito simplesmente passando o sorteio dos xizes para dentro do loop -, mas vimos que isso produziu um resultado similar ao com $X$ fixado (só um pouco menos dramático).
 
 Seria interessante também fazer um estudo Monte Carlo, sorteando diferentes betas dentro da mesma estrutura e diferentes xizes para cada iteração Monte Carlo. Convidamos o leitor a fazer isso em seu tempo livre.
 
@@ -908,6 +911,8 @@ ggplot(norma,
 Como esperado, as normas de beta (em cada iteração e excluído o intercepto) são, em geral, menores na regressão EN comparado com o MLE.
 
 ```{r}
+#| include: false
+#| eval: false
 #| code-fold: true
 
 library(dplyr)
@@ -946,4 +951,7 @@ ggplot(significancia_long, aes(x = modelo, y = sim, fill = sig)) +
   coord_equal()
 
 ```
+
+<!--
 Acima temos uma pseudo-significância dos estimadores.
+-->

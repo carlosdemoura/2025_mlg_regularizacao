@@ -8,10 +8,6 @@ Como já vimos anteriormente, a seleção dos parâmetros de regularização é 
 Uma vez que já apresentamos os principais passos do IRLS-EN, doravante usaremos o pacote `glmnet` (@glmnet), que foi desenvolvido - dentre outros - pelas mesmas mentes por trás da regressão lasso e elastic net, como Tibshirani e Hastie. O pacote conta com diversas rotinas para a implementação da regularização em muitas famílias comuns de MLG (normal, binomial, poisson, etc.).
 
 
-
-
-
-
 ::: {.callout-tip}
 # Outros pacotes
 
@@ -25,34 +21,113 @@ P_{\alpha, \lambda}(\beta) =
 \lambda \left( \frac{1 - \alpha}{2}  \sum_{j=1}^p \beta_j^2 + \alpha\sum_{j=1}^p |\beta_j| \right).
 $$
 
-Para diferentes escolhas de $\alpha \in [0,1]$, serão gerados diferentes penalidades, todas potencialmente razoáveis. Como essas regras podem ser vistas como restrições do espaço paramétrico, a força dessa restrição será dada por $\lambda$. 
-
-
-
-
-
-
-
-
-
-
-### Selecionando $\lambda$
-
-Fixado um $\alpha$, a seleção de $\lambda$ feita pelo `glmnet` @en_glm
-
-Lambda pode ser selecionado como aquele que dá um modelo com tantas covariáveis.
+Para diferentes escolhas de $\alpha \in [0,1]$, serão gerados diferentes penalidades, todas potencialmente razoáveis. Como essas regras podem ser vistas como restrições do espaço paramétrico, a força dessa restrição será dada por $\lambda$. Abaixo temos uma aplicação `shiny` que mostra a importância de uma boa escolha de parâmetros.
 
 ```{r}
-library(glmnet)
-x = cbind(1, 1:10)
-y = 1:10+1
-fit = glmnet(x, y)
-plot(fit)
+#| code-fold: true
+# Aqui tratamos t = 1 / lambda, embora isso não seja necessariamente verdade,
+# é claro que essas duas grandezas são inversamente proporcionais.
+library(shiny)
+
+ui = fluidPage(
+  titlePanel("Região do Elastic Net em R²"),
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("alpha",  "α", min = 0,   max = 1, value = 0.5, step = 0.01),
+      sliderInput("lambda", "λ", min = 0.2, max = 1, value = .9,  step = 0.1)
+    ),
+    mainPanel(
+      plotOutput("plot", height = "600px")
+    )
+  )
+)
+
+server = function(input, output, session) {
+  output$plot = renderPlot({
+    alpha = input$alpha
+    tval  = 1/input$lambda
+    
+    res = 300
+    R   = 10
+    
+    b = seq(-R, R, length.out = res)
+    grid = expand.grid(b1 = b, b2 = b)
+    grid$val = (1 - alpha) * (abs(grid$b1) + abs(grid$b2)) / 2 + alpha * (grid$b1^2 + grid$b2^2)
+    
+    Z = matrix(grid$val, nrow = res, ncol = res, byrow = FALSE)
+    
+    image(x = b, y = b, z = Z <= tval,
+          xlim = c(-10, 10), ylim = c(-10, 10),
+          xlab = expression(beta[1]),
+          ylab = expression(beta[2]),
+          axes = FALSE)
+    
+    axis(1); axis(2); box()
+    abline(h = 0, v = 0, lty = 2)
+    contour(x = b, y = b, z = Z, levels = tval, add = TRUE)
+  })
+}
+
+shinyApp(ui, server)
 ```
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+### Tunando parâmetros com `glmnet`
+
+Fixado um $\alpha$, a seleção de $\lambda$ feita pelo `glmnet` segue as ideias de @en_glm.
+
 ```{r}
-cvfit = cv.glmnet(x, y)
+#| code-fold: true
+set.seed(12345)
+
+n = 250
+bloco = 5
+
+X1 = matrix(rnorm(n*bloco*2), ncol = bloco*2)
+beta1 = c( runif(bloco,-0.7,0.7), rep(0,bloco) )
+
+sigma =
+  matrix(.9, nrow = bloco, ncol = bloco) |>
+  `diag<-`(1)
+X2 = mvtnorm::rmvnorm(n, sigma = sigma)
+beta2 = c(0.6, rep(0,bloco-1))
+
+X = cbind(1,X1,X2)
+beta = c(0.1,beta1,beta2)
+eta = exp(X %*% beta)
+
+Y = rpois(n, eta)
+```
+
+É possível aplicar ideias de validação cruzada (que serão apresentadas adiante para a escolha de $\lambda$) para escolher o melhor $\alpha$, mas em geral esse valor pode ser fixado pelo pesquisador de acordo com o tipo de problema. Vide os casos extremos abaixo de regressão lasso e ridge.
+
+```{r}
+library(glmnet)
+fit = glmnet(X, Y, alpha = 1, family = "poisson")
+plot(fit)
+```
+
+```{r}
+fit = glmnet(X, Y, alpha = 0, family = "poisson")
+plot(fit)
+```
+
+Lambda pode ser selecionado como aquele que dá um modelo com um número pré-selecionado de covariáveis. Outra possibilidade (mais comum) é selecionar o $\lambda$ que minimiza o erro quadrático médio.
+
+```{r}
+cvfit = cv.glmnet(X[1:200,], Y[1:200], family = "poisson")
 plot(cvfit)
 ```
 
@@ -71,40 +146,19 @@ cvfit$lambda.min
 cvfit$lambda.1se
 ```
 
-A predição de novos valores é feita por meio da função `predict`
+A predição de novos valores é feita por meio da função `predict`.
 
 ```{r}
-predict(cvfit, newx = cbind(1, 12), s = "lambda.min")
+X_new = predict(cvfit, newx = X[201:250,], s = "lambda.1se", type = "response")
+head(cbind(X_new, Y[201:250]))
 ```
 
-
-
 ```{r}
-set.seed(12345)
-
-n = 200
-bloco = 10
-
-X1 = matrix(rnorm(n*bloco*2), ncol = bloco*2)
-beta1 = c( runif(bloco,-0.7,0.7), rep(0,bloco) )
-
-sigma =
-  matrix(.9, nrow = bloco, ncol = bloco) |>
-  `diag<-`(1)
-X2 = mvtnorm::rmvnorm(n, sigma = sigma)
-beta2 = c(0.6, rep(0,bloco-1))
-
-X = cbind(1,X1,X2)
-beta = c(0.1,beta1,beta2)
-eta = exp(X %*% beta)
-Y = rpois(n, eta)
+plot(cbind(X_new, Y[201:250]))
 ```
 
 ::: {.callout-tip}
-# sparse matrices
+# Sparse matrices
 
-sparse matrix format
+No R, um objeto do tipo `sparse matrix` aparece como saída do `glmnet` e é, em geral, uma matriz da classe `dgCMatrix` do pacote `Matrix`. Nesse formato, apenas os coeficientes não nulos são armazenados, o que otimiza operações de produto matricial e norma das colunas.
 :::
-
-
-### Selecionando $\alpha$
