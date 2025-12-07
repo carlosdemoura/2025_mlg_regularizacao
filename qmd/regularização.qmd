@@ -474,7 +474,7 @@ $$
 em que:
 
 * $\lambda_{ridge}$ e $\lambda_{lasso}$ são os coeficientes associados às penalidades $\ell_2$ e $\ell_1$, respectivamente;
-* $\alpha \in [0,1]$ é o peso da penalidade $\ell_2$ e $\lambda_en$ é uma média das penalidades somadas.
+* $\alpha \in [0,1]$ é o peso da penalidade $\ell_2$ e $\lambda_{en}$ é uma média das penalidades somadas.
 
 A regressão elastic net goza das seguintes propriedades:
 
